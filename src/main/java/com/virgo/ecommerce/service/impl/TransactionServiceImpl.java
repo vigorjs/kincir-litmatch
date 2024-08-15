@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 
 @Service

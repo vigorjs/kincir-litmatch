@@ -1,5 +1,6 @@
 package com.virgo.ecommerce.controller;
 
+import com.virgo.ecommerce.service.MidtransService;
 import com.virgo.ecommerce.service.TransactionService;
 import com.virgo.ecommerce.utils.dto.restClientDto.MidtransRequestDTO;
 import com.virgo.ecommerce.utils.responseWrapper.Response;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Transaction", description = "Transaction management APIs")
 public class TransactionController {
     private final TransactionService transactionService;
+    private final MidtransService midtransService;
 
     @Operation(summary = "Create a new transaction", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({

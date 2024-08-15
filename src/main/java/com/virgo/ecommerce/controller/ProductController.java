@@ -51,19 +51,6 @@ public class ProductController {
         return Response.renderJSON(productService.getById(id));
     }
 
-    @Operation(summary = "Get product by Store id", security = @SecurityRequirement(name = "bearerAuth"))
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Success!", content = {@Content(schema = @Schema(implementation = WebResponse.class))}),
-            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
-            @ApiResponse(responseCode = "403", description = "Forbidden", content = {@Content(schema = @Schema())}),
-            @ApiResponse(responseCode = "404", description = "Not Found", content = {@Content(schema = @Schema())}),
-            @ApiResponse(responseCode = "500", description = "Internal Server Error", content = {@Content(schema = @Schema())})
-    })
-    @GetMapping("/products/store/{id}")
-    public ResponseEntity<?> findByStoreId(@PathVariable Integer id) {
-        return Response.renderJSON(productService.getByStoreId(id));
-    }
-
     @Operation(summary = "Create a new product", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Success!", content = {@Content(schema = @Schema(implementation = WebResponse.class))}),
