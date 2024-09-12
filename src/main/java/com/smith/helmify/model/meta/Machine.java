@@ -1,0 +1,54 @@
+package com.smith.helmify.model.meta;
+
+import com.smith.helmify.model.BaseEntity;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
+
+@Data
+@Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name = "machines")
+public class Machine {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @Column(name = "location")
+    private String location;
+
+    @Column(name = "status", length = 100, unique = true, nullable = false)
+    private String status;
+
+    @Column(name = "ipAddress", length = 100, nullable = false)
+    private String ipAddress;
+
+    @Embedded
+    private BaseEntity baseEntity = new BaseEntity();
+
+    @PrePersist
+    protected void onCreate() {
+        if (baseEntity == null) {
+            baseEntity = new BaseEntity();
+        }
+        baseEntity.setCreatedAt(LocalDateTime.now());
+        baseEntity.setUpdatedAt(LocalDateTime.now());
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        if (baseEntity == null) {
+            baseEntity = new BaseEntity();
+        }
+        baseEntity.setUpdatedAt(LocalDateTime.now());
+    }
+}
