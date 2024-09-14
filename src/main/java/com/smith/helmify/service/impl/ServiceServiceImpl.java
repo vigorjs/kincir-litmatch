@@ -95,8 +95,8 @@ public class ServiceServiceImpl implements ServiceService {
 
     @Override
     @Cacheable(value = "services")
-    public List<ServiceDTO> getAll() {
-        return serviceRepository.findAll();
+    public List<ServiceDTO> getAll(String machineId) {
+        return serviceRepository.findAll(machineId);
     }
 
     @Override

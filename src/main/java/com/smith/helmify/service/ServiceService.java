@@ -10,7 +10,7 @@ import java.util.List;
 public interface ServiceService {
     ServiceDTO create(ServiceRequestDTO req) throws IOException;
 //    ServiceDTO create(Serv req) throws IOException;
-    List<ServiceDTO> getAll();
+    List<ServiceDTO> getAll(String machineId);
     ServiceDTO getById(Integer id);
     List<ServiceDTO> getByMachineId(String machineId);
     List<ServiceDTO> getByUserId(Integer userId);

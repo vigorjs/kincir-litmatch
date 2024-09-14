@@ -3,8 +3,10 @@ package com.smith.helmify.repo.impl;
 import com.smith.helmify.model.meta.Service;
 import com.smith.helmify.repo.ServiceRepository;
 import com.smith.helmify.utils.dto.ServiceDTO;
+import com.smith.helmify.utils.specifications.ServiceSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,13 +58,27 @@ public class ServiceRepositoryImpl implements ServiceRepository {
     }
 
     @Override
-    public List<ServiceDTO> findAll() {
-        String sql = """
-            SELECT services.*, ss.quantity AS stock
-            FROM services 
-            JOIN service_stocks ss ON services.id = ss.service_id
-        """;
-        return jdbcTemplate.query(sql, new ServiceRowMapper());
+    public List<ServiceDTO> findAll(String machineId) {
+//        String sql = """
+//            SELECT services.*, ss.quantity AS stock
+//            FROM services
+//            JOIN service_stocks ss ON services.id = ss.service_id
+//        """;
+//        return jdbcTemplate.query(sql, new ServiceRowMapper());
+        StringBuilder sql = new StringBuilder("""
+        SELECT services.*, ss.quantity AS stock
+        FROM services 
+        JOIN service_stocks ss ON services.id = ss.service_id
+        """);
+
+        List<Object> parameters = new ArrayList<>();
+
+        if (machineId != null && !machineId.isEmpty()) {
+            sql.append(" WHERE services.machine_id LIKE ?");
+            parameters.add("%" + machineId + "%");
+        }
+
+        return jdbcTemplate.query(sql.toString(), new ServiceRowMapper(), parameters.toArray());
     }
 
     @Override
