@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
 @Builder
@@ -14,6 +15,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ServiceRequestDTO {
+
+    private Integer machine_id;
 
     private String service_name;
 
@@ -26,4 +29,8 @@ public class ServiceRequestDTO {
     @Nullable
     @Min(value = 0, message = "Error stock cant be negative")
     private Integer stock;
+
+    private String category;
+
+    private MultipartFile multipartFile;
 }

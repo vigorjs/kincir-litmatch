@@ -3,6 +3,7 @@ package com.smith.helmify.model.meta;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.smith.helmify.model.BaseEntity;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -16,8 +17,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "services")
-public class Service {
+@Table(name = "reviews")
+public class Review {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -28,26 +30,16 @@ public class Service {
     @JsonIgnore
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @NotNull
-    @JoinColumn(name = "machine_id", referencedColumnName = "id", nullable = false)
-    private Machine machine;
+    @Column(name = "stars", nullable = false)
+    @Min(message = "stars cant be negative", value = 0)
+    @Max(message = "stars cant be more than 5", value = 5)
+    private Integer stars;
 
-    @Column(name = "price", nullable = false)
-    @Min(message = "price cant be negative", value = 0)
-    private Long price;
+    @Column(name = "title", nullable = false, length = 100)
+    private String title;
 
-    @Column(name = "serviceName", nullable = false, length = 100, unique = true)
-    private String service_name;
-
-    @Column(name = "serviceDescription", nullable = true, length = 500)
-    private String service_description;
-
-    @Column(name = "imageUrl", length = 500)
-    private String imageUrl;
-
-    @Column(name = "category", length = 100)
-    private String category;
+    @Column(name = "description", nullable = true, length = 500)
+    private String description;
 
     @Embedded
     private BaseEntity baseEntity = new BaseEntity();

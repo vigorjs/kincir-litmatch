@@ -1,5 +1,6 @@
 package com.smith.helmify.repo.impl;
 
+import com.cloudinary.Cloudinary;
 import com.smith.helmify.model.BaseEntity;
 import com.smith.helmify.model.meta.User;
 import com.smith.helmify.repo.UserRepository;
@@ -24,24 +25,25 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public User save(User user) {
         String sql = """
-            INSERT INTO users (username, email, password, created_at, updated_at) 
-            VALUES (?, ?, ?, ?, ?) 
-            RETURNING id, username, email, password, created_at, updated_at
+            INSERT INTO users (username, email, password, created_at, updated_at, photo) 
+            VALUES (?, ?, ?, ?, ?, ?) 
+            RETURNING id, username, email, password, created_at, updated_at, photo
         """;
         return jdbcTemplate.queryForObject(sql,
-                new Object[]{user.getRealUsername(), user.getEmail(), user.getPassword(), LocalDateTime.now(), LocalDateTime.now()},
+                new Object[]{user.getRealUsername(), user.getEmail(), user.getPassword(), LocalDateTime.now(), LocalDateTime.now(), user.getPhoto()},
                 new UserRowMapper());
     }
 
+    //Axel ganti bagian photo
     @Override
     public void update(User user) {
         String sql = """
-            UPDATE users SET username = ?, email = ?, password = ?, updated_at = ? 
+            UPDATE users SET username = ?, email = ?, password = ?, updated_at = ? , photo = ?
             WHERE id = ? 
-            RETURNING id, username, email, password, created_at, updated_at
+            RETURNING id, username, email, password, created_at, updated_at, photo
         """;
         jdbcTemplate.queryForObject(sql,
-                new Object[]{user.getRealUsername(), user.getEmail(), user.getPassword(), LocalDateTime.now(), user.getId()},
+                new Object[]{user.getRealUsername(), user.getEmail(), user.getPassword(), LocalDateTime.now(), user.getPhoto(), user.getId()},
                 new UserRowMapper());
     }
 
@@ -90,6 +92,8 @@ public class UserRepositoryImpl implements UserRepository {
                     .username(rs.getString("username"))
                     .email(rs.getString("email"))
                     .password(rs.getString("password"))
+                    //Axel ganti
+                    .photo(rs.getString("photo"))
                     .baseEntity(baseEntity)
                     .build();
         }

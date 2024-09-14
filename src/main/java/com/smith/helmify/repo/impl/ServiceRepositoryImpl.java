@@ -24,12 +24,16 @@ public class ServiceRepositoryImpl implements ServiceRepository {
     @Override
     public ServiceDTO save(Service service) {
         String sql = """
-        INSERT INTO services (user_id, service_name, service_description, price, created_at, updated_at) 
-        VALUES (?, ?, ?, ?, ?, ?) 
-        RETURNING id, user_id, service_name, service_description, price, created_at, updated_at
+        INSERT INTO services (user_id, service_name, machine_id,  image_url, service_description, category, price, created_at, updated_at) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) 
+        RETURNING id, user_id, service_name, machine_id, image_url, service_description, category, price, created_at, updated_at
     """;
+
+        // Validasi apakah service.getMachine() ada atau tidak
+        Integer machineId = (service.getMachine() != null) ? service.getMachine().getId() : null;
+
         return jdbcTemplate.queryForObject(sql,
-                new Object[]{service.getUser().getId(), service.getService_name(), service.getService_description(), service.getPrice(), LocalDateTime.now(), LocalDateTime.now()},
+                new Object[]{service.getUser().getId(), service.getService_name(), machineId, service.getImageUrl(), service.getService_description(), service.getCategory(),service.getPrice(), LocalDateTime.now(), LocalDateTime.now()},
                 new ServiceRowMapper());
     }
 
@@ -72,14 +76,25 @@ public class ServiceRepositoryImpl implements ServiceRepository {
     }
 
     @Override
+    public List<ServiceDTO> findByMachineId(Integer machineId) {
+        String sql = """
+            SELECT services.*, ss.quantity AS stock
+            FROM services 
+            JOIN service_stocks ss ON services.id = ss.service_id
+            WHERE services.machine_id = ?
+        """;
+        return jdbcTemplate.query(sql, new Object[]{machineId}, new ServiceRowMapper());
+    }
+
+    @Override
     public void update(Service service) {
         String sql = """
-        UPDATE services SET user_id = ?, service_name = ?, service_description = ?, price = ?, updated_at = ? 
+        UPDATE services SET user_id = ?, service_name = ?, machine_id = ?,  image_url = ?, service_description = ?, category = ?, price = ?, updated_at = ? 
         WHERE id = ? 
-        RETURNING id, user_id, service_name, service_description, price, created_at, updated_at
+        RETURNING id, user_id, service_name, machine_id, image_url, service_description, category, price, created_at, updated_at
     """;
         jdbcTemplate.queryForObject(sql,
-                new Object[]{service.getUser().getId(), service.getService_name(), service.getService_description(), service.getPrice(), LocalDateTime.now(), service.getId()},
+                new Object[]{service.getUser().getId(), service.getService_name(), service.getMachine().getId(), service.getImageUrl(), service.getService_description(), service.getCategory(), service.getPrice(), LocalDateTime.now(), service.getId()},
                 new ServiceRowMapper());
     }
 
@@ -99,13 +114,19 @@ public class ServiceRepositoryImpl implements ServiceRepository {
             } catch (SQLException e) {
                 System.out.println("sql error when getting stock: " + e.getMessage());
             }
+
+            // Build and return ServiceDTO
             return ServiceDTO.builder()
                     .id(rs.getInt("id"))
                     .service_name(rs.getString("service_name"))
+                    .machine_id(rs.getInt("machine_id"))
+                    .image_url(rs.getString("image_url"))
                     .service_description(rs.getString("service_description"))
+                    .category(rs.getString("category"))
                     .price(rs.getLong("price"))
                     .stock(stock)
                     .build();
         }
     }
+
 }

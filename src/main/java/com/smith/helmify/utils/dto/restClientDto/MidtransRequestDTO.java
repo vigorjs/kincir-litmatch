@@ -28,8 +28,9 @@ public class MidtransRequestDTO {
     @Setter
     @RequiredArgsConstructor
     public static class ServiceRequest{
+        private String name;
+        private Long price;
         private Integer serviceId;
-
         private  Integer machineId;
 
         @Nullable

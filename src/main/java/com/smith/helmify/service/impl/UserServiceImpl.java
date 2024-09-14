@@ -1,5 +1,6 @@
 package com.smith.helmify.service.impl;
 
+import com.cloudinary.Cloudinary;
 import com.smith.helmify.service.AuthenticationService;
 import com.smith.helmify.service.UserService;
 import com.smith.helmify.config.advisers.exception.NotFoundException;
@@ -9,7 +10,14 @@ import com.smith.helmify.utils.dto.RegisterRequestDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -17,6 +25,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationService authenticationService;
+    private final Cloudinary cloudinary;
 
     @Override
     public User create(RegisterRequestDTO req) {
@@ -56,9 +65,55 @@ public class UserServiceImpl implements UserService {
         return target;
     }
 
+    //Axel ganti bagian update
     @Override
-    public User update(RegisterRequestDTO req) {
+    public User update(RegisterRequestDTO req, MultipartFile multipartFile) throws IOException {
         User user = authenticationService.getUserAuthenticated();
+
+        if(user.getPhoto() != null && multipartFile != null && !multipartFile.isEmpty()){
+            String oldPhoto = user.getPhoto();
+            String oldCloudId;
+            if(user.getCloudinaryImageId() == null){
+                oldCloudId = oldPhoto.substring(oldPhoto.lastIndexOf('/') + 1, oldPhoto.lastIndexOf('.'));
+            } else {
+                oldCloudId = user.getCloudinaryImageId();
+            }
+
+            cloudinary.uploader().destroy(oldCloudId, Map.of());
+
+            File convfile = new File(multipartFile.getOriginalFilename());
+            FileOutputStream fos = new FileOutputStream(convfile);
+            fos.write(multipartFile.getBytes());
+            fos.close();
+
+            String photo = cloudinary.uploader()
+                    .upload(convfile, Map.of("public_id", "profile" + user.getUsername() + "-" + UUID.randomUUID()
+                    ))
+                    .get("url")
+                    .toString();
+
+            convfile.delete();
+            user.setPhoto(photo);
+            user.setCloudinaryImageId(photo.substring(photo.lastIndexOf('/') + 1, photo.lastIndexOf('.')));
+
+        } else {
+        File convFile = new File(multipartFile.getOriginalFilename());
+        FileOutputStream fos = new FileOutputStream( convFile );
+        fos.write(multipartFile.getBytes());
+        fos.close();
+
+        String photo = cloudinary.uploader()
+                        .upload(convFile, Map.of("public_id", "profile" + user.getUsername() + "-" + UUID.randomUUID()
+                                ))
+                .get("url")
+                .toString();
+
+        convFile.delete();
+
+        user.setPhoto(photo);
+        user.setCloudinaryImageId(photo.substring(photo.lastIndexOf('/') + 1, photo.lastIndexOf('.')));
+    }
+
         updateUserDetails(user, req);
         userRepository.update(user);
 

@@ -55,7 +55,7 @@ public class MachineServiceImpl implements MachineService {
         Machine machine = getById(id);
         machine.setLocation(req.getLocation());
         machine.setIpAddress(req.getIpAddress());
-        machine.setStatus(req.getStatus());
+        machine.setStatus(String.valueOf(MachineStatus.valueOf(req.getStatus())));
         machineRepository.save(machine);
         return machine;
     }

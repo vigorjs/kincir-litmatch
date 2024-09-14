@@ -66,10 +66,23 @@ public class TransactionServiceImpl implements TransactionService {
             if (currentStock.getQuantity() < 1) {
                 throw new RuntimeException("Insufficient stock for service: " + service.getService_name());
             }
+            serviceRequest.setName(service.getService_name());
+            serviceRequest.setPrice(service.getPrice());
+            serviceRequest.setQuantity(1); //set agar quantity 1 ngikutin flow bisnisnya
 
             // Hitung total untuk setiap item
             total += service.getPrice();
         }
+
+        // Tambahkan service untuk cuci dan ngeringinnya
+        MidtransRequestDTO.ServiceRequest newServiceRequest = new MidtransRequestDTO.ServiceRequest();
+        newServiceRequest.setServiceId(null); // ID service ini tidak ada di database, jadi diset null
+        newServiceRequest.setName("Quick Clean & Dry up");
+        newServiceRequest.setPrice(25000L);
+        newServiceRequest.setQuantity(1);
+        req.getItem_detail().add(newServiceRequest);
+        // Tambahkan harga service baru ke total
+        total += newServiceRequest.getPrice();
 
         // Simpan transaksi ke database untuk mendapatkan ID
         Transaction transactionBuild = Transaction.builder()
@@ -85,9 +98,10 @@ public class TransactionServiceImpl implements TransactionService {
                 "TESTDUAA-"+transaction.getId(),
                 total
         );
+
         req.setTransaction_details(transactionDetails);
 
-        MidtransResponseDTO midtransResponse = midtransService.chargePayment(req);
+        MidtransResponseDTO midtransResponse = midtransService.chargePayment(req); //ini pas ngecharge
         transaction.setOrder_id(midtransResponse.getOrder_id());
         transactionRepository.update(transaction);
 
@@ -151,10 +165,21 @@ public class TransactionServiceImpl implements TransactionService {
             }
             serviceRequest.setName(service.getService_name());
             serviceRequest.setPrice(service.getPrice());
+            serviceRequest.setQuantity(1); //set agar quantity 1 ngikutin flow bisnisnya
 
             // Hitung total untuk setiap item
             total += service.getPrice();
         }
+
+        // Tambahkan service untuk cuci dan ngeringinnya
+        MidtransSnapRequestDTO.ServiceRequest newServiceRequest = new MidtransSnapRequestDTO.ServiceRequest();
+        newServiceRequest.setServiceId(null); // ID service ini tidak ada di database, jadi diset null
+        newServiceRequest.setName("Quick Clean & Dry up");
+        newServiceRequest.setPrice(25000L);
+        newServiceRequest.setQuantity(1);
+        req.getItem_details().add(newServiceRequest);
+        // Tambahkan harga service baru ke total
+        total += newServiceRequest.getPrice();
 
         // Simpan transaksi ke database untuk mendapatkan ID
         Transaction transactionBuild = Transaction.builder()

@@ -34,7 +34,7 @@ public class SecurityConfiguration {
                 .disable()
                 .authorizeHttpRequests()
                 .requestMatchers("/api/auth/**", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
-                //buat testing
+        //buat testing
 //                .requestMatchers("/api/**").permitAll()
                 .anyRequest()
                 .authenticated()

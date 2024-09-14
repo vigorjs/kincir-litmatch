@@ -14,6 +14,10 @@ public class ServiceDTO {
     private Integer id;
     private String service_name;
 
+    private String image_url;
+
+    private Integer machine_id;
+
     @Nullable
     private String service_description;
 
@@ -23,4 +27,5 @@ public class ServiceDTO {
     @Min(value = 0, message = "price cant be negative")
     private Integer stock = 0;
 
+    private String category;
 }

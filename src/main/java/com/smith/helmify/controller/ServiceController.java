@@ -1,5 +1,7 @@
 package com.smith.helmify.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smith.helmify.service.ServiceService;
 import com.smith.helmify.utils.dto.ServiceRequestDTO;
 import com.smith.helmify.utils.responseWrapper.Response;
@@ -16,6 +18,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api")
@@ -24,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Service", description = "Service management APIs")
 public class ServiceController {
     private final ServiceService serviceService;
+    private final ObjectMapper objectMapper;
 
     @Operation(summary = "Get all services", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
@@ -51,7 +57,7 @@ public class ServiceController {
         return Response.renderJSON(serviceService.getById(id));
     }
 
-    @Operation(summary = "Create a new service", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "Get service by machineId", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Success!", content = {@Content(schema = @Schema(implementation = WebResponse.class))}),
             @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
@@ -59,10 +65,30 @@ public class ServiceController {
             @ApiResponse(responseCode = "404", description = "Not Found", content = {@Content(schema = @Schema())}),
             @ApiResponse(responseCode = "500", description = "Internal Server Error", content = {@Content(schema = @Schema())})
     })
-    @PostMapping("/services")
-    public ResponseEntity<?> create(@Valid @RequestBody ServiceRequestDTO req) {
+    @GetMapping("/services?machineId={machineId}")
+    public ResponseEntity<?> findByMachineId(@PathVariable Integer machineId) {
+        return Response.renderJSON(serviceService.getByMachineId(machineId));
+    }
+
+    @Operation(summary = "Create a new service", security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Success!", content = {@Content(schema = @Schema(implementation = WebResponse.class))}),
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+    })
+    @PostMapping(path = "/services", consumes = "multipart/form-data")
+    public ResponseEntity<?> create(
+            @RequestPart("req") String req,  // Handles JSON request part
+            @RequestPart("file") MultipartFile multipartFile  // Handles file part
+    ) throws IOException {
+        ServiceRequestDTO serviceRequestDTO = objectMapper.readValue(req, new TypeReference<>() {
+        });
+        serviceRequestDTO.setMultipartFile(multipartFile);
         return Response.renderJSON(
-                serviceService.create(req),
+                serviceService.create(serviceRequestDTO),
+//                serviceRequestDTO,
                 "Service berhasil dibuat!",
                 HttpStatus.CREATED
         );
@@ -76,11 +102,11 @@ public class ServiceController {
             @ApiResponse(responseCode = "404", description = "Not Found", content = {@Content(schema = @Schema())}),
             @ApiResponse(responseCode = "500", description = "Internal Server Error", content = {@Content(schema = @Schema())})
     })
-    @PutMapping("/services/{id}")
-    public ResponseEntity<?> update(@PathVariable Integer id, @Valid @RequestBody ServiceRequestDTO req) {
+    @PutMapping(path="/services/{id}",consumes = "multipart/form-data")
+    public ResponseEntity<?> update(@PathVariable Integer id, @Valid @ModelAttribute ServiceRequestDTO req, @RequestPart("file") MultipartFile multipartFile) throws IOException{
 //        updateById
         return Response.renderJSON(
-                serviceService.updateById(id, req),
+                serviceService.updateById(id, req, multipartFile),
                 "Service Updated",
                 HttpStatus.OK
         );
