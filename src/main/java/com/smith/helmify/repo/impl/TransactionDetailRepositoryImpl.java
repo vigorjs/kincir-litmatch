@@ -74,7 +74,7 @@ public class TransactionDetailRepositoryImpl implements TransactionDetailReposit
         public TransactionDetail mapRow(ResultSet rs, int rowNum) throws SQLException {
             return TransactionDetail.builder()
                     .id(rs.getInt("id"))
-                    .machine(Machine.builder().id(rs.getInt("machine_id")).build())
+                    .machine(Machine.builder().id(rs.getString("machine_id")).build())
                     .service(Service.builder().id(rs.getInt("service_id")).build())
                     .transaction(Transaction.builder().id(rs.getInt("transaction_id")).build())
                     .amount(rs.getLong("amount"))

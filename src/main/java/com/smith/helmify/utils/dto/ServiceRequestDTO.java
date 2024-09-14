@@ -16,7 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 @AllArgsConstructor
 public class ServiceRequestDTO {
 
-    private Integer machine_id;
+    private String machine_id;
 
     private String service_name;
 

@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface MachineRepository extends JpaRepository<Machine, Integer> {
+public interface MachineRepository extends JpaRepository<Machine, String> {
 //    Optional<Machine> findById(Integer id);
 }

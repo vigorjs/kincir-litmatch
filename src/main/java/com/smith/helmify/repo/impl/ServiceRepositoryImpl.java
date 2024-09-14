@@ -30,7 +30,7 @@ public class ServiceRepositoryImpl implements ServiceRepository {
     """;
 
         // Validasi apakah service.getMachine() ada atau tidak
-        Integer machineId = (service.getMachine() != null) ? service.getMachine().getId() : null;
+        String machineId = (service.getMachine() != null) ? service.getMachine().getId() : null;
 
         return jdbcTemplate.queryForObject(sql,
                 new Object[]{service.getUser().getId(), service.getService_name(), machineId, service.getImageUrl(), service.getService_description(), service.getCategory(),service.getPrice(), LocalDateTime.now(), LocalDateTime.now()},
@@ -119,7 +119,7 @@ public class ServiceRepositoryImpl implements ServiceRepository {
             return ServiceDTO.builder()
                     .id(rs.getInt("id"))
                     .service_name(rs.getString("service_name"))
-                    .machine_id(rs.getInt("machine_id"))
+                    .machine_id(rs.getString("machine_id"))
                     .image_url(rs.getString("image_url"))
                     .service_description(rs.getString("service_description"))
                     .category(rs.getString("category"))

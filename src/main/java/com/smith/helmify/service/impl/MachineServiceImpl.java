@@ -40,18 +40,18 @@ public class MachineServiceImpl implements MachineService {
     }
 
     @Override
-    public Machine getById(Integer id) {
+    public Machine getById(String id) {
         return machineRepository.findById(id).orElseThrow(() -> new NotFoundException("machine not found"));
     }
 
     @Override
-    public void delete(Integer id) {
+    public void delete(String id) {
         Machine machine = getById(id);
         machineRepository.delete(machine);
     }
 
     @Override
-    public Machine updateById(Integer id, MachineRequestDTO req) {
+    public Machine updateById(String id, MachineRequestDTO req) {
         Machine machine = getById(id);
         machine.setLocation(req.getLocation());
         machine.setIpAddress(req.getIpAddress());

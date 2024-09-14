@@ -20,13 +20,13 @@ import java.time.LocalDateTime;
 public class Machine {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
 
     @Column(name = "location")
     private String location;
 
-    @Column(name = "status", length = 100, unique = true, nullable = false)
+    @Column(name = "status", length = 100, nullable = false)
     private String status;
 
     @Column(name = "ipAddress", length = 100, nullable = false)

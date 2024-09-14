@@ -47,7 +47,7 @@ public class MachineController {
             @ApiResponse(responseCode = "500", description = "Internal Server Error", content = {@Content(schema = @Schema())})
     })
     @GetMapping("/machines/{id}")
-    public ResponseEntity<?> findById(@PathVariable Integer id) {
+    public ResponseEntity<?> findById(@PathVariable String id) {
         return Response.renderJSON(machineService.getById(id));
     }
 
@@ -77,7 +77,7 @@ public class MachineController {
             @ApiResponse(responseCode = "500", description = "Internal Server Error", content = {@Content(schema = @Schema())})
     })
     @PutMapping("/machines/{id}")
-    public ResponseEntity<?> update(@PathVariable Integer id, @Valid @RequestBody MachineRequestDTO req) {
+    public ResponseEntity<?> update(@PathVariable String id, @Valid @RequestBody MachineRequestDTO req) {
 //        updateById
         return Response.renderJSON(
                 machineService.updateById(id, req),
@@ -95,7 +95,7 @@ public class MachineController {
             @ApiResponse(responseCode = "500", description = "Internal Server Error", content = {@Content(schema = @Schema())})
     })
     @DeleteMapping("/machines/{id}")
-    public ResponseEntity<?> deleteById(@PathVariable Integer id) {
+    public ResponseEntity<?> deleteById(@PathVariable String id) {
 //        delete
         machineService.delete(id);
         return Response.renderJSON(null,"Machine berhasil dihapus", HttpStatus.OK);

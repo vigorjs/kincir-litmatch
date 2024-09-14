@@ -27,7 +27,7 @@ public class MidtransSnapRequestDTO {
         private String name;
         private Long price;
         private Integer serviceId;
-        private  Integer machineId;
+        private String machineId;
 
         @Nullable
         private Integer quantity = 1;

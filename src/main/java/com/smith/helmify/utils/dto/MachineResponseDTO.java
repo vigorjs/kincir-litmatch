@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MachineResponseDTO {
-    private Integer id;
+    private String id;
     private String location;
     private String status;
     private String ipAddress;

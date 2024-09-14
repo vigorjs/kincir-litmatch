@@ -10,7 +10,7 @@ import java.util.List;
 public interface MachineService {
     Machine create(MachineRequestDTO req);
     List<MachineResponseDTO> getAll();
-    Machine getById(Integer id);
-    void delete(Integer id);
-    Machine updateById(Integer id, MachineRequestDTO req);
+    Machine getById(String id);
+    void delete(String id);
+    Machine updateById(String id, MachineRequestDTO req);
 }

@@ -16,7 +16,7 @@ public class ServiceDTO {
 
     private String image_url;
 
-    private Integer machine_id;
+    private String machine_id;
 
     @Nullable
     private String service_description;
