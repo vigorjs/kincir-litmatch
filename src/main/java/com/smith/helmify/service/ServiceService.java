@@ -12,8 +12,7 @@ public interface ServiceService {
 //    ServiceDTO create(Serv req) throws IOException;
     List<ServiceDTO> getAll(String machineId);
     ServiceDTO getById(Integer id);
-    List<ServiceDTO> getByMachineId(String machineId);
-    List<ServiceDTO> getByUserId(Integer userId);
+//    List<ServiceDTO> getByUserId(Integer userId);
     void delete(Integer id);
     ServiceDTO updateById(Integer id, ServiceRequestDTO req, MultipartFile multipartFile) throws IOException;
 }

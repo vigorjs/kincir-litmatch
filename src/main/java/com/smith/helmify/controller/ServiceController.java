@@ -40,7 +40,7 @@ public class ServiceController {
             @ApiResponse(responseCode = "500", description = "Internal Server Error", content = {@Content(schema = @Schema())})
     })
     @GetMapping("/services")
-    public ResponseEntity<?> findAll(@RequestParam(value = "machineId", required = false) String machineId) {
+    public ResponseEntity<?> findAll(@RequestParam(required = false) String machineId) {
         return Response.renderJSON(serviceService.getAll(machineId));
     }
 
@@ -55,19 +55,6 @@ public class ServiceController {
     @GetMapping("/services/{id}")
     public ResponseEntity<?> findById(@PathVariable Integer id) {
         return Response.renderJSON(serviceService.getById(id));
-    }
-
-    @Operation(summary = "Get service by machineId", security = @SecurityRequirement(name = "bearerAuth"))
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Success!", content = {@Content(schema = @Schema(implementation = WebResponse.class))}),
-            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
-            @ApiResponse(responseCode = "403", description = "Forbidden", content = {@Content(schema = @Schema())}),
-            @ApiResponse(responseCode = "404", description = "Not Found", content = {@Content(schema = @Schema())}),
-            @ApiResponse(responseCode = "500", description = "Internal Server Error", content = {@Content(schema = @Schema())})
-    })
-    @GetMapping("/services?machineId={machineId}")
-    public ResponseEntity<?> findByMachineId(@PathVariable String machineId) {
-        return Response.renderJSON(serviceService.getByMachineId(machineId));
     }
 
     @Operation(summary = "Create a new service", security = @SecurityRequirement(name = "bearerAuth"))

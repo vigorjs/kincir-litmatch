@@ -15,6 +15,7 @@ public class MidtransSnapRequestDTO {
 
     private MidtransSnapRequestDTO.TransactionDetails transaction_details;
 
+    @Nullable
     private MidtransSnapRequestDTO.CreditCard credit_card;
 
     @Nullable

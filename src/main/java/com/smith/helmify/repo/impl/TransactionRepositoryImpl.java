@@ -6,6 +6,8 @@ import com.smith.helmify.model.enums.TransactionStatus;
 import com.smith.helmify.model.meta.Transaction;
 import com.smith.helmify.repo.TransactionRepository;
 import com.smith.helmify.repo.UserRepository;
+import com.smith.helmify.service.TransactionService;
+import com.smith.helmify.service.impl.TransactionServiceImpl;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -69,9 +72,23 @@ public class TransactionRepositoryImpl implements TransactionRepository {
     }
 
     @Override
-    public List<Transaction> findAll() {
-        String sql = "SELECT * FROM transactions";
-        return jdbcTemplate.query(sql, new TransactionRowMapper(userRepository));
+    public List<Transaction> findAll(Integer userId) {
+        StringBuilder sql = new StringBuilder("SELECT * from transactions");
+
+        List<Object> parameters = new ArrayList<>();
+
+        if (userId != null) {
+            sql.append(" WHERE user_id = ?");
+            parameters.add(userId);
+        }
+
+        List<Transaction> transactions = jdbcTemplate.query(sql.toString(), parameters.toArray(), new TransactionRowMapper(userRepository));
+
+        if (transactions.isEmpty()) {
+            throw new NotFoundException("No transactions found for userId: " + userId);
+        }
+
+        return transactions;
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.smith.helmify.repo.impl;
 
+import com.smith.helmify.config.advisers.exception.NotFoundException;
 import com.smith.helmify.model.meta.Service;
 import com.smith.helmify.repo.ServiceRepository;
 import com.smith.helmify.utils.dto.ServiceDTO;
@@ -59,12 +60,6 @@ public class ServiceRepositoryImpl implements ServiceRepository {
 
     @Override
     public List<ServiceDTO> findAll(String machineId) {
-//        String sql = """
-//            SELECT services.*, ss.quantity AS stock
-//            FROM services
-//            JOIN service_stocks ss ON services.id = ss.service_id
-//        """;
-//        return jdbcTemplate.query(sql, new ServiceRowMapper());
         StringBuilder sql = new StringBuilder("""
         SELECT services.*, ss.quantity AS stock
         FROM services 
@@ -78,29 +73,11 @@ public class ServiceRepositoryImpl implements ServiceRepository {
             parameters.add("%" + machineId + "%");
         }
 
-        return jdbcTemplate.query(sql.toString(), new ServiceRowMapper(), parameters.toArray());
-    }
-
-    @Override
-    public List<ServiceDTO> findByUserId(Integer userId) {
-        String sql = """
-            SELECT services.*, ss.quantity AS stock
-            FROM services 
-            JOIN service_stocks ss ON services.id = ss.service_id
-            WHERE services.user_id = ?
-        """;
-        return jdbcTemplate.query(sql, new Object[]{userId}, new ServiceRowMapper());
-    }
-
-    @Override
-    public List<ServiceDTO> findByMachineId(String machineId) {
-        String sql = """
-            SELECT services.*, ss.quantity AS stock
-            FROM services 
-            JOIN service_stocks ss ON services.id = ss.service_id
-            WHERE services.machine_id = ?
-        """;
-        return jdbcTemplate.query(sql, new Object[]{machineId}, new ServiceRowMapper());
+        List<ServiceDTO> services = jdbcTemplate.query(sql.toString(), new ServiceRowMapper(), parameters.toArray());
+        if (services.isEmpty()) {
+            throw new NotFoundException("No services found for machineId: " + machineId);
+        }
+        return services;
     }
 
     @Override

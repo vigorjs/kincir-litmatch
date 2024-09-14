@@ -18,11 +18,14 @@ import com.smith.helmify.utils.dto.restClientDto.MidtransSnapRequestDTO;
 import com.smith.helmify.utils.dto.restClientDto.MidtransSnapResponseDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 @org.springframework.stereotype.Service
@@ -41,6 +44,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "transactions", allEntries = true)
     public MidtransResponseDTO create(MidtransRequestDTO req) {
         User user = authenticationService.getUserAuthenticated();
 
@@ -137,6 +141,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "transactions", allEntries = true)
     public MidtransSnapResponseDTO createSnap(MidtransSnapRequestDTO req) {
         User user = authenticationService.getUserAuthenticated();
 
@@ -203,6 +208,9 @@ public class TransactionServiceImpl implements TransactionService {
 
         // create transaction_detail
         for (MidtransSnapRequestDTO.ServiceRequest serviceRequest : req.getItem_details()) {
+            if (serviceRequest.getServiceId() == null && serviceRequest.getName().toLowerCase().contains("clean")){
+                continue;
+            }
             ServiceDTO serviceDTO = serviceRepository.findById(serviceRequest.getServiceId())
                     .orElseThrow(() -> new NotFoundException("Service Not Found"));
 
@@ -231,10 +239,25 @@ public class TransactionServiceImpl implements TransactionService {
         return midtransSnapResponse;
     }
 
+    @Override
+    @Cacheable(value = "transactions", key = "#userId != null ? #userId : 'all'")
+    public List<Transaction> getAll(Integer userId) {
+        return transactionRepository.findAll(userId);
+    }
+
+    @Override
+    @Cacheable(value = "services", key = "#id")
+    public Transaction getById(Integer id) {
+        return transactionRepository.findById(id).orElseThrow(() -> new NotFoundException("Transaction is not found"));
+    }
+
     private void midtransSnapChargeRequestValidation(MidtransSnapRequestDTO req) {
-        if (req.getCredit_card().getSecure() == null) {
-            req.getCredit_card().setSecure(true);
+        if (req.getCredit_card() == null) {
+            MidtransSnapRequestDTO.CreditCard creditCard = new MidtransSnapRequestDTO.CreditCard();
+            creditCard.setSecure(true);
+            req.setCredit_card(creditCard);
         }
+
         if (req.getCustom_expiry() == null) {
             req.setCustom_expiry(new MidtransSnapRequestDTO.CustomExpiry());
             req.getCustom_expiry().setUnit("minute");
