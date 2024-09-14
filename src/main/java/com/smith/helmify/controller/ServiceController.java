@@ -40,8 +40,8 @@ public class ServiceController {
             @ApiResponse(responseCode = "500", description = "Internal Server Error", content = {@Content(schema = @Schema())})
     })
     @GetMapping("/services")
-    public ResponseEntity<?> findAll() {
-        return Response.renderJSON(serviceService.getAll());
+    public ResponseEntity<?> findAll(@RequestParam(value = "machineId", required = false) String machineId) {
+        return Response.renderJSON(serviceService.getAll(machineId));
     }
 
     @Operation(summary = "Get service by id", security = @SecurityRequirement(name = "bearerAuth"))
@@ -66,7 +66,7 @@ public class ServiceController {
             @ApiResponse(responseCode = "500", description = "Internal Server Error", content = {@Content(schema = @Schema())})
     })
     @GetMapping("/services?machineId={machineId}")
-    public ResponseEntity<?> findByMachineId(@PathVariable Integer machineId) {
+    public ResponseEntity<?> findByMachineId(@PathVariable String machineId) {
         return Response.renderJSON(serviceService.getByMachineId(machineId));
     }
 
