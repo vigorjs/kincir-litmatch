@@ -107,7 +107,7 @@ public class ServiceServiceImpl implements ServiceService {
 
     @Override
     @Cacheable(value = "services", key = "#machineId")
-    public List<ServiceDTO> getByMachineId(Integer machineId) {
+    public List<ServiceDTO> getByMachineId(String machineId) {
         return serviceRepository.findByMachineId(machineId);
     }
 

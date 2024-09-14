@@ -11,7 +11,7 @@ public interface ServiceRepository {
     Optional<ServiceDTO> findById(Integer id);
     List<ServiceDTO> findAll();
     List<ServiceDTO> findByUserId(Integer userId);
-    List<ServiceDTO> findByMachineId(Integer machineId);
+    List<ServiceDTO> findByMachineId(String machineId);
     void update(Service service);
     void deleteById(Integer id);
 }

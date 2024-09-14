@@ -76,7 +76,7 @@ public class ServiceRepositoryImpl implements ServiceRepository {
     }
 
     @Override
-    public List<ServiceDTO> findByMachineId(Integer machineId) {
+    public List<ServiceDTO> findByMachineId(String machineId) {
         String sql = """
             SELECT services.*, ss.quantity AS stock
             FROM services 

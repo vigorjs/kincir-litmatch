@@ -66,7 +66,7 @@ public class ServiceController {
             @ApiResponse(responseCode = "500", description = "Internal Server Error", content = {@Content(schema = @Schema())})
     })
     @GetMapping("/services?machineId={machineId}")
-    public ResponseEntity<?> findByMachineId(@PathVariable Integer machineId) {
+    public ResponseEntity<?> findByMachineId(@PathVariable String machineId) {
         return Response.renderJSON(serviceService.getByMachineId(machineId));
     }
 
