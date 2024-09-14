@@ -9,7 +9,7 @@ public interface TransactionRepository {
     Transaction save(Transaction transaction);
     Optional<Transaction> findById(Integer id);
     List<Transaction> findByUserId(Integer userId);
-    List<Transaction> findAll();
+    List<Transaction> findAll(Integer userId);
     void update(Transaction transaction);
     void deleteById(Integer id);
     Optional<Transaction> findTopByOrderByIdDesc();

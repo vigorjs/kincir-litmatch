@@ -10,8 +10,6 @@ public interface ServiceRepository {
     ServiceDTO save(Service service);
     Optional<ServiceDTO> findById(Integer id);
     List<ServiceDTO> findAll(String machineId);
-    List<ServiceDTO> findByUserId(Integer userId);
-    List<ServiceDTO> findByMachineId(String machineId);
     void update(Service service);
     void deleteById(Integer id);
 }

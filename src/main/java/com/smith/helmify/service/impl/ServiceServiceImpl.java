@@ -94,7 +94,7 @@ public class ServiceServiceImpl implements ServiceService {
     }
 
     @Override
-    @Cacheable(value = "services")
+    @Cacheable(value = "services", key = "#machineId != null ? #machineId : 'all'")
     public List<ServiceDTO> getAll(String machineId) {
         return serviceRepository.findAll(machineId);
     }
@@ -105,17 +105,11 @@ public class ServiceServiceImpl implements ServiceService {
         return serviceRepository.findById(id).orElseThrow(() -> new NotFoundException("Service not found"));
     }
 
-    @Override
-    @Cacheable(value = "services", key = "#machineId")
-    public List<ServiceDTO> getByMachineId(String machineId) {
-        return serviceRepository.findByMachineId(machineId);
-    }
-
-    @Override
-    @Cacheable(value = "services", key = "#userId")
-    public List<ServiceDTO> getByUserId(Integer userId) {
-        return serviceRepository.findByUserId(userId);
-    }
+//    @Override
+//    @Cacheable(value = "services", key = "#userId")
+//    public List<ServiceDTO> getByUserId(Integer userId) {
+//        return serviceRepository.findByUserId(userId);
+//    }
 
     @Override
     @CacheEvict(value = "services", key = "#id")
