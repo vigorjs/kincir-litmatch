@@ -1,6 +1,7 @@
 package com.smith.helmify.model.meta;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.smith.helmify.model.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Entity
 @Table(name = "services")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Service {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,7 +39,7 @@ public class Service {
     @Min(message = "price cant be negative", value = 0)
     private Long price;
 
-    @Column(name = "serviceName", nullable = false, length = 100, unique = true)
+    @Column(name = "serviceName", nullable = false, length = 100)
     private String service_name;
 
     @Column(name = "serviceDescription", nullable = true, length = 500)

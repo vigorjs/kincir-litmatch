@@ -31,11 +31,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
-        if (request.getServletPath().contains("/api/v1/auth")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-        if (request.getServletPath().contains("/v3/api-docs") || request.getServletPath().contains("/swagger-ui")) {
+        if (request.getServletPath().contains("/api/auth/oauth2/token") ||
+                request.getServletPath().contains("/v3/api-docs") ||
+                request.getServletPath().contains("/swagger-ui")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -64,13 +62,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
         } catch (SignatureException e) {
-            // Handle invalid JWT signature
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
             response.getWriter().write("{\"Error\": \"Invalid JWT Signature: " + e.getMessage() + "\"}");
             return;
         } catch (ExpiredJwtException e) {
-            // Handle Expired JWT Signature
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
             response.getWriter().write("{\"Error\": \"Your Session has expired, Please Login Again \"}");
@@ -78,4 +74,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         filterChain.doFilter(request, response);
     }
+
 }

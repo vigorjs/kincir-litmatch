@@ -192,7 +192,8 @@ public class ServiceServiceImpl implements ServiceService {
         return serviceDTO;
     }
 
-    private Service serviceDTOToService(ServiceDTO service){
+    @Override
+    public Service serviceDTOToService(ServiceDTO service){
 
         return Service.builder()
                 .id(service.getId())

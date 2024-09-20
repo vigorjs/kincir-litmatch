@@ -6,11 +6,10 @@ import com.smith.helmify.model.enums.TransactionStatus;
 import com.smith.helmify.model.meta.Transaction;
 import com.smith.helmify.repo.TransactionRepository;
 import com.smith.helmify.repo.UserRepository;
-import com.smith.helmify.service.TransactionService;
-import com.smith.helmify.service.impl.TransactionServiceImpl;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -92,6 +91,7 @@ public class TransactionRepositoryImpl implements TransactionRepository {
     }
 
     @Override
+    @CacheEvict(value = "transactions", allEntries = true)
     public void update(Transaction transaction) {
         String sql = """
         UPDATE transactions SET user_id = ?, order_id = ?, status = ?, gross_amount = ?, updated_at = ? 

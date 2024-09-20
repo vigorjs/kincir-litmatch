@@ -1,5 +1,6 @@
 package com.smith.helmify.controller;
 
+import com.smith.helmify.model.meta.User;
 import com.smith.helmify.service.AuthenticationService;
 import com.smith.helmify.service.UserService;
 import com.smith.helmify.utils.dto.RegisterRequestDTO;
@@ -65,7 +66,7 @@ public class UserController {
             @ApiResponse(responseCode = "500", description = "Internal Server Error", content = {@Content(schema = @Schema())})
     })
     @PostMapping("/users")
-    public ResponseEntity<?> create(@RequestBody RegisterRequestDTO req) {
+    public ResponseEntity<?> create(@RequestBody User req) {
         return Response.renderJSON(
                 userService.create(req),
                 "User berhasil dibuat!",

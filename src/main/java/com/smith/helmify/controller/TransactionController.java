@@ -1,8 +1,14 @@
 package com.smith.helmify.controller;
 
-import com.smith.helmify.service.MidtransService;
-import com.smith.helmify.service.TransactionService;
+import com.smith.helmify.model.enums.MachineStatus;
+import com.smith.helmify.model.enums.TransactionStatus;
+import com.smith.helmify.model.meta.Transaction;
+import com.smith.helmify.model.meta.User;
+import com.smith.helmify.service.*;
+import com.smith.helmify.utils.dto.MachineRequestDTO;
+import com.smith.helmify.utils.dto.restClientDto.IotRequestDTO;
 import com.smith.helmify.utils.dto.restClientDto.MidtransRequestDTO;
+import com.smith.helmify.utils.dto.restClientDto.MidtransResponseDTO;
 import com.smith.helmify.utils.dto.restClientDto.MidtransSnapRequestDTO;
 import com.smith.helmify.utils.responseWrapper.Response;
 import com.smith.helmify.utils.responseWrapper.WebResponse;
@@ -26,6 +32,9 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Transaction", description = "Transaction management APIs")
 public class TransactionController {
     private final TransactionService transactionService;
+    private final AuthenticationService authenticationService;
+    private final MidtransService midtransService;
+    private final MachineService machineService;
 
     @Operation(summary = "Create a new transaction", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
@@ -61,6 +70,50 @@ public class TransactionController {
         );
     }
 
+    @Operation(summary = "Refresh and Update Transaction", security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Success!", content = {@Content(schema = @Schema(implementation = WebResponse.class))}),
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Forbidden", content = {@Content(schema = @Schema())}),
+            @ApiResponse(responseCode = "404", description = "Not Found", content = {@Content(schema = @Schema())}),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error", content = {@Content(schema = @Schema())})
+    })
+    @PostMapping("/transaction-refresh/{machine_id}")
+    public void refreshAndUpdateTransaction(@RequestBody Transaction req, @PathVariable String machine_id) {
+        transactionService.refreshAndUpdateTransactionStatus(req, machine_id);
+    }
+
+    @Operation(summary = "Cancel Transaction", security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Success!", content = {@Content(schema = @Schema(implementation = WebResponse.class))}),
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Forbidden", content = {@Content(schema = @Schema())}),
+            @ApiResponse(responseCode = "404", description = "Not Found", content = {@Content(schema = @Schema())}),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error", content = {@Content(schema = @Schema())})
+    })
+    @PostMapping("/transaction-cancel/{order_id}")
+    public ResponseEntity<?> cancelTransaction(@PathVariable String order_id) {
+        MidtransResponseDTO res = midtransService.changeStatus(order_id, TransactionStatus.cancel.name());
+        return Response.renderJSON(
+                res,
+                "Transaction berhasil dibuat!",
+                HttpStatus.CREATED
+        );
+    }
+
+    @Operation(summary = "Transaction Finish / IOT Done", security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Success!", content = {@Content(schema = @Schema(implementation = WebResponse.class))}),
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Forbidden", content = {@Content(schema = @Schema())}),
+            @ApiResponse(responseCode = "404", description = "Not Found", content = {@Content(schema = @Schema())}),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error", content = {@Content(schema = @Schema())})
+    })
+    @PostMapping("/transaction-finish/{machine_id}")
+    public void finishTransaction(@PathVariable String machine_id) {
+        machineService.updateById(machine_id, MachineRequestDTO.builder().status(String.valueOf(MachineStatus.READY)).build());
+    }
+
     @Operation(summary = "Get all transactions", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Success!", content = {@Content(schema = @Schema(implementation = WebResponse.class))}),
@@ -85,5 +138,19 @@ public class TransactionController {
     @GetMapping("/transactions/{id}")
     public ResponseEntity<?> findById(@PathVariable Integer id) {
         return Response.renderJSON(transactionService.getById(id));
+    }
+
+    @Operation(summary = "Get transaction by user logged in", security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Success!", content = {@Content(schema = @Schema(implementation = WebResponse.class))}),
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Forbidden", content = {@Content(schema = @Schema())}),
+            @ApiResponse(responseCode = "404", description = "Not Found", content = {@Content(schema = @Schema())}),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error", content = {@Content(schema = @Schema())})
+    })
+    @GetMapping("/transactions-user")
+    public ResponseEntity<?> findByUserLoggedIn() {
+        User user = authenticationService.getUserAuthenticated();
+        return Response.renderJSON(transactionService.getAll(user.getId()));
     }
 }

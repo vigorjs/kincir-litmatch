@@ -5,7 +5,10 @@ import com.smith.helmify.model.meta.Service;
 import com.smith.helmify.model.meta.Transaction;
 import com.smith.helmify.model.meta.TransactionDetail;
 import com.smith.helmify.repo.TransactionDetailRepository;
+import com.smith.helmify.service.MachineService;
+import com.smith.helmify.service.ServiceService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -21,6 +24,8 @@ import java.util.Optional;
 public class TransactionDetailRepositoryImpl implements TransactionDetailRepository {
 
     private final JdbcTemplate jdbcTemplate;
+    private final MachineService machineService;
+    private final ServiceService serviceService;
 
     @Override
     public TransactionDetail save(TransactionDetail transactionDetail) {
@@ -31,14 +36,14 @@ public class TransactionDetailRepositoryImpl implements TransactionDetailReposit
                 transactionDetail.getTransaction().getId(),
                 transactionDetail.getAmount(),
                 transactionDetail.getQuantity()
-        }, new TransactionDetailRowMapper());
+        }, new TransactionDetailRowMapper(machineService, serviceService));
     }
 
     @Override
     public Optional<TransactionDetail> findById(Integer id) {
         String sql = "SELECT * FROM transaction_details WHERE id = ?";
         try {
-            TransactionDetail transactionDetail = jdbcTemplate.queryForObject(sql, new Object[]{id}, new TransactionDetailRowMapper());
+            TransactionDetail transactionDetail = jdbcTemplate.queryForObject(sql, new Object[]{id}, new TransactionDetailRowMapper(machineService, serviceService));
             return Optional.ofNullable(transactionDetail);
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
@@ -48,13 +53,13 @@ public class TransactionDetailRepositoryImpl implements TransactionDetailReposit
     @Override
     public List<TransactionDetail> findByTransactionId(Integer transactionId) {
         String sql = "SELECT * FROM transaction_details WHERE transaction_id = ?";
-        return jdbcTemplate.query(sql, new Object[]{transactionId}, new TransactionDetailRowMapper());
+        return jdbcTemplate.query(sql, new Object[]{transactionId}, new TransactionDetailRowMapper(machineService, serviceService));
     }
 
     @Override
     public List<TransactionDetail> findAll() {
         String sql = "SELECT * FROM transaction_details";
-        return jdbcTemplate.query(sql, new TransactionDetailRowMapper());
+        return jdbcTemplate.query(sql, new TransactionDetailRowMapper(machineService, serviceService));
     }
 
     @Override
@@ -70,12 +75,24 @@ public class TransactionDetailRepositoryImpl implements TransactionDetailReposit
     }
 
     private static class TransactionDetailRowMapper implements RowMapper<TransactionDetail> {
+
+        private final MachineService machineService;
+        private final ServiceService serviceService;
+
+        public TransactionDetailRowMapper(MachineService machineService, ServiceService serviceService) {
+            this.machineService = machineService;
+            this.serviceService = serviceService;
+        }
+
         @Override
         public TransactionDetail mapRow(ResultSet rs, int rowNum) throws SQLException {
+            Machine machine = machineService.getById(rs.getString("machine_id"));
+            Service service = serviceService.serviceDTOToService(serviceService.getById(rs.getInt("service_id")));
+
             return TransactionDetail.builder()
                     .id(rs.getInt("id"))
-                    .machine(Machine.builder().id(rs.getString("machine_id")).build())
-                    .service(Service.builder().id(rs.getInt("service_id")).build())
+                    .machine(machine)
+                    .service(service)
                     .transaction(Transaction.builder().id(rs.getInt("transaction_id")).build())
                     .amount(rs.getLong("amount"))
                     .quantity(rs.getInt("quantity"))

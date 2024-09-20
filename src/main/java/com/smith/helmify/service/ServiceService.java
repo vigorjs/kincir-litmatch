@@ -1,5 +1,6 @@
 package com.smith.helmify.service;
 
+import com.smith.helmify.model.meta.Service;
 import com.smith.helmify.utils.dto.ServiceRequestDTO;
 import com.smith.helmify.utils.dto.ServiceDTO;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,4 +16,5 @@ public interface ServiceService {
 //    List<ServiceDTO> getByUserId(Integer userId);
     void delete(Integer id);
     ServiceDTO updateById(Integer id, ServiceRequestDTO req, MultipartFile multipartFile) throws IOException;
+    Service serviceDTOToService(ServiceDTO service);
 }

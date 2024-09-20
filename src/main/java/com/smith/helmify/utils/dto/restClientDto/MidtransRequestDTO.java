@@ -2,6 +2,7 @@ package com.smith.helmify.utils.dto.restClientDto;
 
 import com.smith.helmify.model.meta.Service;
 import jakarta.annotation.Nullable;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.util.List;
@@ -11,6 +12,9 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MidtransRequestDTO {
+
+    @NotNull
+    private  String machine_id;
 
     @Nullable
     private String payment_type;
@@ -31,7 +35,6 @@ public class MidtransRequestDTO {
         private String name;
         private Long price;
         private Integer serviceId;
-        private  String machineId;
 
         @Nullable
         private Integer quantity = 1;

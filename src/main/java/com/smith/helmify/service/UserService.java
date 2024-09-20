@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.util.List;
 
 public interface UserService {
-    User create(RegisterRequestDTO req);
+    User create(User req);
     List<User> getAll();
     User getById(Integer id);
     void delete(Integer id);

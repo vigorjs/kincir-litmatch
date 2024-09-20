@@ -17,8 +17,13 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Base64;
+import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -52,10 +57,15 @@ public class ApplicationConfig {
     }
 
     @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
+
+    @Bean
     public HttpHeaders httpHeaders(){
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("Authorization", "Basic " + Base64.getEncoder().encodeToString((midtransServerKey + ":").getBytes()));
+        headers.set("Authorization", "Basic " + Base64.getEncoder().encodeToString((midtransServerKey).getBytes()));
         return headers;
     }
 

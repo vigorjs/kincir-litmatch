@@ -1,21 +1,19 @@
 package com.smith.helmify.service.impl;
 
+import com.smith.helmify.config.advisers.exception.InternalException;
 import com.smith.helmify.config.advisers.exception.NotFoundException;
+import com.smith.helmify.model.enums.MachineStatus;
+import com.smith.helmify.model.enums.ServiceCategories;
 import com.smith.helmify.model.enums.TransactionStatus;
 import com.smith.helmify.model.meta.*;
 import com.smith.helmify.repo.ServiceRepository;
 import com.smith.helmify.repo.ServiceStockRepository;
 import com.smith.helmify.repo.TransactionDetailRepository;
 import com.smith.helmify.repo.TransactionRepository;
-import com.smith.helmify.service.AuthenticationService;
-import com.smith.helmify.service.MachineService;
-import com.smith.helmify.service.MidtransService;
-import com.smith.helmify.service.TransactionService;
+import com.smith.helmify.service.*;
 import com.smith.helmify.utils.dto.ServiceDTO;
-import com.smith.helmify.utils.dto.restClientDto.MidtransRequestDTO;
-import com.smith.helmify.utils.dto.restClientDto.MidtransResponseDTO;
-import com.smith.helmify.utils.dto.restClientDto.MidtransSnapRequestDTO;
-import com.smith.helmify.utils.dto.restClientDto.MidtransSnapResponseDTO;
+import com.smith.helmify.utils.dto.TransactionResponseDTO;
+import com.smith.helmify.utils.dto.restClientDto.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -25,7 +23,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 
 @org.springframework.stereotype.Service
@@ -41,6 +42,7 @@ public class TransactionServiceImpl implements TransactionService {
     private final ServiceRepository serviceRepository;
     private final ServiceStockRepository serviceStockRepository;
     private final MachineService machineService;
+    private final IotService iotService;
 
     @Override
     @Transactional
@@ -109,6 +111,9 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setOrder_id(midtransResponse.getOrder_id());
         transactionRepository.update(transaction);
 
+        //get machine
+        Machine machine = machineService.getById(req.getMachine_id());
+
 
         // create transaction_detail
         for (MidtransRequestDTO.ServiceRequest serviceRequest : req.getItem_detail()) {
@@ -122,8 +127,6 @@ public class TransactionServiceImpl implements TransactionService {
                     .user(user)
                     .build();
 
-            Machine machine = machineService.getById(serviceRequest.getMachineId());
-
             TransactionDetail transactionDetail = new TransactionDetail();
             transactionDetail.setMachine(machine);
             transactionDetail.setService(service);
@@ -135,7 +138,7 @@ public class TransactionServiceImpl implements TransactionService {
         }
 
         // jalankan thread untuk mengecek status pembayaran dengan looping hit ke midtrans sebanyak expired time
-        executorService.submit( () -> updateTransactionStatus(transaction.getId(), transaction) );
+//        executorService.submit( () -> updateTransactionStatus(transaction) );
         return midtransResponse;
     }
 
@@ -144,47 +147,65 @@ public class TransactionServiceImpl implements TransactionService {
     @CacheEvict(value = "transactions", allEntries = true)
     public MidtransSnapResponseDTO createSnap(MidtransSnapRequestDTO req) {
         User user = authenticationService.getUserAuthenticated();
+        Machine machine = machineService.getById(req.getMachine_id());
+
+        // validasi machine must be ready
+        if (!machine.getStatus().equals(MachineStatus.READY.name())){
+            throw new InternalException("Machine still Working / wasn't Ready please wait...");
+        }
 
         // Validasi dan setel informasi yang diperlukan untuk request checkout service
         midtransSnapChargeRequestValidation(req);
 
         // Hitung total harga dari semua produk request
         Long total = 0L;
-        for (MidtransSnapRequestDTO.ServiceRequest serviceRequest : req.getItem_details()) {
-            ServiceDTO serviceDTO = serviceRepository.findById(serviceRequest.getServiceId())
-                    .orElseThrow(() -> new NotFoundException("Service Not Found"));
+        if (req.getItem_details() == null || req.getItem_details().isEmpty()) {
+            // Tambahkan service untuk ngeringin doang
+            MidtransSnapRequestDTO.ServiceRequest newServiceRequest = new MidtransSnapRequestDTO.ServiceRequest();
+            newServiceRequest.setServiceId(null); // ID service ini tidak ada di database, jadi diset null
+            newServiceRequest.setName("Only Dry");
+            newServiceRequest.setPrice(15000L);
+            newServiceRequest.setQuantity(1);
+            req.getItem_details().add(newServiceRequest);
+            // Tambahkan harga service baru ke total
+            total += newServiceRequest.getPrice();
+        } else {
+            for (MidtransSnapRequestDTO.ServiceRequest serviceRequest : req.getItem_details()) {
+                ServiceDTO serviceDTO = serviceRepository.findById(serviceRequest.getServiceId())
+                        .orElseThrow(() -> new NotFoundException("Service Not Found"));
 
-            Service service = Service.builder()
-                    .id(serviceDTO.getId())
-                    .service_name(serviceDTO.getService_name())
-                    .price(serviceDTO.getPrice())
-                    .service_description(serviceDTO.getService_description())
-                    .user(user)
-                    .build();
+                Service service = Service.builder()
+                        .id(serviceDTO.getId())
+                        .service_name(serviceDTO.getService_name())
+                        .price(serviceDTO.getPrice())
+                        .service_description(serviceDTO.getService_description())
+                        .user(user)
+                        .build();
 
-            ServiceStock currentStock = serviceStockRepository.findByServiceId(service.getId())
-                    .orElseThrow(() -> new NotFoundException("Stock not found for service: " + service.getService_name()));
+                ServiceStock currentStock = serviceStockRepository.findByServiceId(service.getId())
+                        .orElseThrow(() -> new NotFoundException("Stock not found for service: " + service.getService_name()));
 
-            if (currentStock.getQuantity() < 1) {
-                throw new RuntimeException("Insufficient stock for service: " + service.getService_name());
+                if (currentStock.getQuantity() < 1) {
+                    throw new RuntimeException("Insufficient stock for service: " + service.getService_name());
+                }
+                serviceRequest.setName(service.getService_name());
+                serviceRequest.setPrice(service.getPrice());
+                serviceRequest.setQuantity(1); //set agar quantity 1 ngikutin flow bisnisnya
+
+                // Hitung total untuk setiap item
+                total += service.getPrice();
             }
-            serviceRequest.setName(service.getService_name());
-            serviceRequest.setPrice(service.getPrice());
-            serviceRequest.setQuantity(1); //set agar quantity 1 ngikutin flow bisnisnya
 
-            // Hitung total untuk setiap item
-            total += service.getPrice();
+            // Tambahkan service untuk cuci dan ngeringinnya
+            MidtransSnapRequestDTO.ServiceRequest newServiceRequest = new MidtransSnapRequestDTO.ServiceRequest();
+            newServiceRequest.setServiceId(null); // ID service ini tidak ada di database, jadi diset null
+            newServiceRequest.setName("Quick Clean & Dry up");
+            newServiceRequest.setPrice(25000L);
+            newServiceRequest.setQuantity(1);
+            req.getItem_details().add(newServiceRequest);
+            // Tambahkan harga service baru ke total
+            total += newServiceRequest.getPrice();
         }
-
-        // Tambahkan service untuk cuci dan ngeringinnya
-        MidtransSnapRequestDTO.ServiceRequest newServiceRequest = new MidtransSnapRequestDTO.ServiceRequest();
-        newServiceRequest.setServiceId(null); // ID service ini tidak ada di database, jadi diset null
-        newServiceRequest.setName("Quick Clean & Dry up");
-        newServiceRequest.setPrice(25000L);
-        newServiceRequest.setQuantity(1);
-        req.getItem_details().add(newServiceRequest);
-        // Tambahkan harga service baru ke total
-        total += newServiceRequest.getPrice();
 
         // Simpan transaksi ke database untuk mendapatkan ID
         Transaction transactionBuild = Transaction.builder()
@@ -197,22 +218,31 @@ public class TransactionServiceImpl implements TransactionService {
 
         // Charge payment via Midtrans Snap
         MidtransSnapRequestDTO.TransactionDetails transactionDetails = new MidtransSnapRequestDTO.TransactionDetails(
-                "SNAPDUA-" + transaction.getId(),
+                "TRANSACTION-" + transaction.getId(),
                 total
         );
         req.setTransaction_details(transactionDetails);
 
-        MidtransSnapResponseDTO midtransSnapResponse = midtransService.chargePaymentSnap(req);
-        transaction.setOrder_id(midtransSnapResponse.getToken());
+        MidtransSnapResponseDTO midtransSnapResponse = midtransService.chargePaymentSnap(req); //charge ke midtrans
+
+//        transaction.setOrder_id(midtransSnapResponse.getToken());
+        transaction.setOrder_id(transactionDetails.getOrder_id());
         transactionRepository.update(transaction);
 
+//        if (midtransSnapResponse.getTransaction_detail() == null) {
+//            midtransSnapResponse.setTransaction_detail(new ArrayList<>());
+//        }
+        midtransSnapResponse.setTransaction_detail(Optional.ofNullable(midtransSnapResponse.getTransaction_detail())
+                .orElse(new ArrayList<>()));
+
         // create transaction_detail
+        TransactionDetail transactionDetail = null;
         for (MidtransSnapRequestDTO.ServiceRequest serviceRequest : req.getItem_details()) {
-            if (serviceRequest.getServiceId() == null && serviceRequest.getName().toLowerCase().contains("clean")){
+            if (serviceRequest.getServiceId() == null || serviceRequest.getName().toLowerCase().contains("clean")) {
                 continue;
             }
             ServiceDTO serviceDTO = serviceRepository.findById(serviceRequest.getServiceId())
-                    .orElseThrow(() -> new NotFoundException("Service Not Found"));
+                    .orElseThrow(() -> new NotFoundException("Service Not Found - nudros was hacked this program"));
 
             Service service = Service.builder()
                     .id(serviceDTO.getId())
@@ -222,33 +252,53 @@ public class TransactionServiceImpl implements TransactionService {
                     .user(user)
                     .build();
 
-            Machine machine = machineService.getById(serviceRequest.getMachineId());
-
-            TransactionDetail transactionDetail = new TransactionDetail();
+            transactionDetail = new TransactionDetail();
             transactionDetail.setMachine(machine);
             transactionDetail.setService(service);
             transactionDetail.setTransaction(transaction);
             transactionDetail.setQuantity(serviceRequest.getQuantity());
             transactionDetail.setAmount(service.getPrice());
 
-            transactionDetailRepository.save(transactionDetail);
+            TransactionDetail savedTransactionDetail = transactionDetailRepository.save(transactionDetail);
+            midtransSnapResponse.getTransaction_detail().add(savedTransactionDetail);
         }
 
+        //set transaction ke response
+        midtransSnapResponse.setTransaction(transaction);
+
         // jalankan thread untuk mengecek status pembayaran dengan looping hit ke midtrans sebanyak expired time
-        executorService.submit(() -> updateTransactionStatus(transaction.getId(), transaction));
+        // executorService.submit(() -> updateTransactionStatus(transaction.getId(), transaction, transactionDetails.getOrder_id()));
         return midtransSnapResponse;
     }
 
     @Override
     @Cacheable(value = "transactions", key = "#userId != null ? #userId : 'all'")
-    public List<Transaction> getAll(Integer userId) {
-        return transactionRepository.findAll(userId);
+    public List<TransactionResponseDTO> getAll(Integer userId) {
+        List<Transaction> transactions = transactionRepository.findAll(userId);
+        List<TransactionResponseDTO> result =  new ArrayList<>();
+        for(var trans : transactions){
+            List<TransactionDetail> tempTransDetail = transactionDetailRepository.findByTransactionId(trans.getId());
+            TransactionResponseDTO tempDTO = TransactionResponseDTO.builder()
+                    .transaction(trans)
+                    .transactionDetails(tempTransDetail)
+            .build();
+            result.add(tempDTO);
+        }
+
+        return result;
     }
 
     @Override
-    @Cacheable(value = "services", key = "#id")
-    public Transaction getById(Integer id) {
-        return transactionRepository.findById(id).orElseThrow(() -> new NotFoundException("Transaction is not found"));
+    @Cacheable(value = "transactions", key = "#id")
+    public TransactionResponseDTO getById(Integer id) {
+        Transaction transaction = transactionRepository.findById(id).orElseThrow(() -> new NotFoundException("Transaction is not found"));
+        List<TransactionDetail> tempTransDetail = transactionDetailRepository.findByTransactionId(transaction.getId());
+        TransactionResponseDTO tempDTO = TransactionResponseDTO.builder()
+                .transaction(transaction)
+                .transactionDetails(tempTransDetail)
+                .build();
+
+     return  tempDTO;
     }
 
     private void midtransSnapChargeRequestValidation(MidtransSnapRequestDTO req) {
@@ -285,27 +335,84 @@ public class TransactionServiceImpl implements TransactionService {
         return formatter.format(Instant.now());
     }
 
-    public void updateTransactionStatus(Integer id, Transaction obj) {
-        boolean flag = false;
-        for (int i = 0; i < 120; i++) {
-            try {
-                MidtransResponseDTO response = midtransService.getStatus(obj.getOrder_id());
+//    @Override
+//    @CacheEvict(value = "transactions", allEntries = true)
+//    public void updateTransactionStatus(Transaction req) {
+//        boolean flag = false;
+//        for (int i = 0; i < 100; i++) {
+//            try {
+//                MidtransResponseDTO response = midtransService.getStatus(req.getOrder_id());
+//                if (response != null && !"200".equals(response.getStatus_code())) {
+//                    response = midtransService.getStatus(req.getOrder_id());
+//                }
+//
+//                if (response != null && (TransactionStatus.settlement.name().equals(response.getTransaction_status()) || TransactionStatus.capture.name().equals(response.getTransaction_status()))) {
+//                    Transaction transaction = transactionRepository.findById(req.getId()).orElseThrow();
+//                    transaction.setStatus(TransactionStatus.settlement);
+//                    transactionRepository.update(transaction);
+//
+//                    flag = true;
+//                    break;
+//                }
+//                Thread.sleep(3000);
+//            } catch (Exception e) {
+//                log.error("error in updateTransactionStatus() {}", e.getMessage());
+//            }
+//        }
+//        if (!flag) {
+//            midtransService.changeStatus(req.getOrder_id(), TransactionStatus.cancel.name());
+//        }
+//        log.info("Exiting updateTransactionStatus()");
+//    }
 
-                if (response != null && String.valueOf(TransactionStatus.settlement).equals(response.getTransaction_status())) {
-                    Transaction Transaction = transactionRepository.findById(id).orElseThrow();
-                    Transaction.setStatus(TransactionStatus.valueOf("settlement"));
-                    transactionRepository.save(Transaction);
-                    flag = true;
-                    break;
+    @Override
+    @CacheEvict(value = "transactions", allEntries = true)
+    public void refreshAndUpdateTransactionStatus(Transaction req, String machine_id) {
+        try {
+            MidtransResponseDTO response = midtransService.getStatus(req.getOrder_id());
+
+            if (response != null) {
+                String transactionStatus = response.getTransaction_status();
+
+                if ("200".equals(response.getStatus_code())) {
+                    if (!TransactionStatus.settlement.name().equals(transactionStatus)) {
+                        midtransService.changeStatus(req.getOrder_id(), transactionStatus);
+                    } else {
+                        Transaction transaction = transactionRepository.findById(req.getId())
+                                .orElseThrow(() -> new NotFoundException("Transaction not found"));
+                        transaction.setStatus(TransactionStatus.settlement);
+                        transactionRepository.update(transaction);
+                    }
+                } else {
+                    log.warn("Midtrans response failed or status code is not 200 for order_id: {}", req.getOrder_id());
                 }
-                Thread.sleep(3000);
-            } catch (Exception e) {
-                log.error("error in updateTransactionStatus() {}", e.getMessage());
+            } else {
+                log.warn("Midtrans response is null for order_id: {}", req.getOrder_id());
             }
+
+            TransactionResponseDTO transaction = getById(req.getId());
+            String transactionStatusName = transaction.getTransaction().getStatus().name();
+
+            if (TransactionStatus.settlement.name().equals(transactionStatusName) ||
+                    TransactionStatus.capture.name().equals(transactionStatusName)) {
+
+                String parfume = "";
+                String sabun = "";
+
+                for( TransactionDetail transactionDetail : transaction.getTransactionDetails()){
+                    if (transactionDetail.getService().getCategory().equals(ServiceCategories.PARFUM.name())){
+                        parfume = transactionDetail.getService().getService_name();
+                    }else {
+                        sabun = transactionDetail.getService().getService_name();
+                    }
+                }
+
+                iotService.IotAction(new IotRequestDTO(sabun, parfume, machine_id));
+            }
+        } catch (Exception e) {
+            log.error("Error in refreshAndUpdateTransactionStatus(): {}", e.getMessage(), e);
         }
-        if (!flag){
-            midtransService.changeStatus(obj.getOrder_id(), String.valueOf(TransactionStatus.cancel));
-        }
-        log.info("Exiting updateTransactionStatus()");
+        log.info("Exiting refreshAndUpdateTransactionStatus()");
     }
+
 }

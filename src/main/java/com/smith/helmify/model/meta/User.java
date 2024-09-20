@@ -6,12 +6,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.smith.helmify.model.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.GrantedAuthority;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
 
@@ -36,7 +33,7 @@ public class User implements UserDetails {
     private String email;
 
     @JsonIgnore
-    @Column(name = "password", nullable = false)
+    @Column(name = "password")
     private String password;
 
     @Column(name = "photo")

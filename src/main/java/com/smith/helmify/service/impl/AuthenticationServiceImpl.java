@@ -66,6 +66,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .build();
     }
 
+//    if ("oauth2".equals(request.getPassword())) {
+//        var user = userRepository.findByEmail(request.getEmail())
+//                .orElseThrow();
+//        var jwtToken = jwtService.generateToken(user);
+//        var refreshToken = jwtService.generateRefreshToken(user);
+//        return AuthenticationResponseDTO.builder()
+//                .accessToken(jwtToken)
+//                .refreshToken(refreshToken)
+//                .user(user)
+//                .build();
+//    }
+
     @Override
     public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
         final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);

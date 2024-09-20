@@ -1,5 +1,6 @@
 package com.smith.helmify.model.meta;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.smith.helmify.model.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Entity
 @Table(name = "machines")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Machine {
 
     @Id

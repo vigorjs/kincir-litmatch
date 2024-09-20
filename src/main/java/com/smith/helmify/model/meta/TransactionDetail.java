@@ -1,5 +1,6 @@
 package com.smith.helmify.model.meta;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -19,6 +20,7 @@ public class TransactionDetail {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "machine_id", referencedColumnName = "id", nullable = false)
+    @JsonIgnore
     private Machine machine;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -27,6 +29,7 @@ public class TransactionDetail {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "transaction_id", referencedColumnName = "id", nullable = false)
+    @JsonIgnore
     private Transaction transaction;
 
     @Column(name = "amount", nullable = true)

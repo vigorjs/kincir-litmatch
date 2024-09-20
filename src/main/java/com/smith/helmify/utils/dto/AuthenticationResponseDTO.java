@@ -16,8 +16,11 @@ public class AuthenticationResponseDTO {
 
     @JsonProperty("access_token")
     private String accessToken;
+
     @JsonProperty("refresh_token")
+    @Nullable
     private String refreshToken;
+
     @JsonProperty("user")
     @Nullable
     private User user;

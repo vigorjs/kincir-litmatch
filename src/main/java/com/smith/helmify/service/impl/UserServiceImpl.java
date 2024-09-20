@@ -28,11 +28,11 @@ public class UserServiceImpl implements UserService {
     private final Cloudinary cloudinary;
 
     @Override
-    public User create(RegisterRequestDTO req) {
+    public User create(User req) {
         User user = User.builder()
                 .username(req.getUsername())
                 .email(req.getEmail())
-                .password(passwordEncoder.encode(req.getPassword()))
+                .password(req.getPassword().isEmpty() || req.getPassword() == null ? null : passwordEncoder.encode(req.getPassword()))
                 .build();
         return userRepository.save(user);
     }

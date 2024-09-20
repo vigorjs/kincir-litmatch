@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -30,26 +31,23 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf()
-                .disable()
+//                .cors().disable()
+                .csrf().disable()
                 .authorizeHttpRequests()
-                .requestMatchers("/api/auth/**", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
-        //buat testing
-//                .requestMatchers("/api/**").permitAll()
-                .anyRequest()
-                .authenticated()
-                .and()
-                .exceptionHandling()
-                    .authenticationEntryPoint(customAuthenticationEntryPoint)
-                    .accessDeniedHandler(accessDeniedException)
+                .requestMatchers("/api/auth/**", "/v3/api-docs/**", "/swagger-ui/**", "/oauth2/**", "/swagger-ui.html", "/login", "/api/transaction-finish/**").permitAll()
+                .anyRequest().authenticated()
                 .and()
                 .sessionManagement()
-                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()
+                .exceptionHandling()
+                .authenticationEntryPoint(customAuthenticationEntryPoint)
+                .accessDeniedHandler(accessDeniedException)
                 .and()
                 .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-        ;
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
+
 }

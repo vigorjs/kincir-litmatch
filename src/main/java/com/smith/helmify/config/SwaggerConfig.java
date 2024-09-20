@@ -25,6 +25,12 @@ public class SwaggerConfig implements WebMvcConfigurer {
     @Value("${swagger.prod-url}")
     private String prodUrl;
 
+    @Value("${spring.security.oauth2.client.provider.google.authorization-uri}")
+    private String authorizationUrl;
+
+    @Value("${spring.security.oauth2.client.provider.google.token-uri}")
+    private String tokenUrl;
+
     @Bean
     public OpenAPI myOpenAPI() {
         Server devServer = new Server();
@@ -49,12 +55,30 @@ public class SwaggerConfig implements WebMvcConfigurer {
                 .description("This API exposes endpoints to manage demo.").termsOfService("https://vigorjs.me")
                 .license(mitLicense);
 
-        return new OpenAPI().info(info).servers(List.of(devServer, prodServer))
+        return new OpenAPI()
+                .info(info)
+                .servers(List.of(devServer, prodServer))
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
-                .components(new io.swagger.v3.oas.models.Components().addSecuritySchemes("bearerAuth",
-                        new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT")));
-
+                .addSecurityItem(new SecurityRequirement().addList("oauth2"))
+                .components(new io.swagger.v3.oas.models.Components()
+                        .addSecuritySchemes("bearerAuth",
+                                new SecurityScheme()
+                                        .type(SecurityScheme.Type.HTTP)
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT"))
+                        .addSecuritySchemes("oauth2",
+                                new SecurityScheme()
+                                        .type(SecurityScheme.Type.OAUTH2)
+                                        .flows(new io.swagger.v3.oas.models.security.OAuthFlows()
+                                                .authorizationCode(new io.swagger.v3.oas.models.security.OAuthFlow()
+                                                        .authorizationUrl(authorizationUrl)
+                                                        .tokenUrl(tokenUrl)
+                                                        .scopes(new io.swagger.v3.oas.models.security.Scopes()
+                                                                .addString("openid", "OpenID Connect scope")
+                                                                .addString("profile", "Access to user's basic profile")
+                                                                .addString("email", "Access to user's email address"))))));
     }
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")

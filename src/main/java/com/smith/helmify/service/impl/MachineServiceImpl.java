@@ -46,16 +46,16 @@ public class MachineServiceImpl implements MachineService {
 
     @Override
     public void delete(String id) {
-        Machine machine = getById(id);
+        Machine machine = machineRepository.findById(id).orElseThrow(() -> new NotFoundException("Machine not found when deleting"));
         machineRepository.delete(machine);
     }
 
     @Override
     public Machine updateById(String id, MachineRequestDTO req) {
-        Machine machine = getById(id);
-        machine.setLocation(req.getLocation());
-        machine.setIpAddress(req.getIpAddress());
-        machine.setStatus(String.valueOf(MachineStatus.valueOf(req.getStatus())));
+        Machine machine = machineRepository.findById(id).orElseThrow(() -> new NotFoundException("Machine not found when updating"));
+        machine.setLocation(req.getLocation() == null || req.getLocation().isEmpty() ? machine.getLocation() : req.getLocation());
+        machine.setIpAddress(req.getIpAddress() == null || req.getIpAddress().isEmpty() ? machine.getIpAddress() : req.getIpAddress());
+        machine.setStatus(String.valueOf(MachineStatus.valueOf(req.getStatus() == null || req.getStatus().isEmpty() ? machine.getStatus() : req.getStatus())));
         machineRepository.save(machine);
         return machine;
     }
