@@ -1,0 +1,65 @@
+services:
+  web:
+    image: vigorjs/helmify-be
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: jdbc:postgresql://postgresserver:5432/helmify_db
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      REDIS_HOST: redisserver
+      REDIS_PORT: 6379
+      OAUTH_CLIENT_ID: 371352429606-mfdcong6qv2v3158o0mkdsd137pcd2oo.apps.googleusercontent.com
+      OAUTH_CLIENT_SECRET: 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
+      JWT_SECRET_KEY: 743777217A25432A462D4A614E635266556A586E3272357538782F413F442847
+      SWAGGER_HOST: http://139.59.253.126:8080
+      MIDTRANS_SERVER_KEY: SB-Mid-server-uqKv7R52RROgL1I0AX_DOcI6:Batassuci123#
+      MIDTRANS_API_URL: https://api.sandbox.midtrans.com/
+      MIDTRANS_SNAP_URL: https://app.sandbox.midtrans.com/
+      CLOUDINARY_CLOUD_NAME: da2fkrvsf
+      CLOUDINARY_API_KEY: 244597447676429
+      CLOUDINARY_API_SECRET: zQ4uwA48ylulXJZj-xyoMdcrQrE
+      GOOGLE_API_KEY: AIzaSyAqXCvgq2eefvWbXjmccsE1xTbvnoTnIiM
+    depends_on:
+      - postgresserver
+      - redisserver
+
+  web-fe:
+    image: vigorjs/helmify-fe
+    ports:
+      - "80:80"
+
+  postgresserver:
+    container_name: postgresserver
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: helmify_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - helmify_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  redisserver:
+    container_name: redisserver
+    image: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+networks:
+  default:
+    driver: bridge
+
+volumes:
+  helmify_db:
+    driver: local

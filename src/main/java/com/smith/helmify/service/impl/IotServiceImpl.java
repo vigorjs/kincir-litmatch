@@ -32,7 +32,7 @@ public class IotServiceImpl implements IotService {
     public void IotAction(IotRequestDTO req) {
         try {
             Machine machine = machineService.getById(req.getMachine_id());
-            String uriMachine = "http://" + machine.getIpAddress();
+            String uriMachine =machine.getIpAddress();
 
             // Set content type
             headers.setContentType(MediaType.APPLICATION_JSON);

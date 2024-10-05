@@ -1,0 +1,90 @@
+spring:
+  application:
+    name: helmify
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    database: postgresql
+
+  cache:
+    type: redis
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${OAUTH_CLIENT_ID}
+            client-secret: ${OAUTH_CLIENT_SECRET}
+            scope: email, profile
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            jwk-set-uri: https://www.googleapis.com/oauth2/v3/certs
+            user-name-attribute: sub
+
+application:
+  security:
+    jwt:
+      secret-key: ${JWT_SECRET_KEY}
+      expiration: 86400000
+      refresh-token:
+        expiration: 604800000
+
+swagger:
+  dev-url: ${SWAGGER_HOST}
+  prod-url: ${SWAGGER_HOST}
+
+midtrans:
+#  server-key: SB-Mid-server-uqKv7R52RROgL1I0AX_DOcI6:Batassuci123#
+#  api-url: https://api.sandbox.midtrans.com/
+#  api-snap-url: https://app.sandbox.midtrans.com/
+  server-key: ${MIDTRANS_SERVER_KEY}
+  api-url: ${MIDTRANS_API_URL}
+  api-snap-url: ${MIDTRANS_SNAP_URL}
+
+cloudinary:
+#  cloud-name: da2fkrvsf
+#  api-key: 244597447676429
+#  api-secret: zQ4uwA48ylulXJZj-xyoMdcrQrE
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+  api-key: ${CLOUDINARY_API_KEY}
+  api-secret: ${CLOUDINARY_API_SECRET}
+
+google:
+  api:
+    key: ${GOOGLE_API_KEY}
+
+logging:
+  level:
+    org:
+      springframework:
+        jdbc: DEBUG
+        security: DEBUG
+        web: DEBUG
+        data: DEBUG
+      hibernate: DEBUG
+      jpa: DEBUG
+      sql: DEBUG
+    com:
+      smith:
+        helmify: DEBUG
+    jwt: DEBUG

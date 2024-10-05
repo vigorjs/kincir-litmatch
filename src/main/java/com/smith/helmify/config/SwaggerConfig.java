@@ -82,6 +82,7 @@ public class SwaggerConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
+//                .allowedOrigins("68.183.176.168") ini best practice corsnya, tapi karena ada mobile maka harusnya bisa pakai api gateway
                 .allowedOrigins("*")
                 .allowedMethods("*")
                 .allowedHeaders("*");
