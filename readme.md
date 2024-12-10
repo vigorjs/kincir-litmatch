@@ -1,7 +1,4 @@
-# Helmify
-
-Proyek ini adalah implementasi sederhana dari sistem e-commerce menggunakan Java 17 dan Maven. Proyek ini mencakup beberapa teknologi dan fitur seperti Spring IoC, Java Stream, Native SQL Query, Redis Caching, dan PostgreSQL. Dokumentasi API dapat diakses melalui Swagger atau melalui Postman Collection yang tersedia di dalam folder `resources`.
-
+# Kincir Litmatch
 ## Implementasi
 
 - **Java 17**: Versi Java yang digunakan untuk proyek ini.
@@ -29,7 +26,7 @@ Sebelum menjalankan proyek ini, pastikan Anda telah menginstal:
 1. **Clone repository:**
    ```bash
    git clone <repository-url>
-   cd mini-helmify
+   cd mini-kincir
    ```
 2. **Konfigurasi Database:**
 
