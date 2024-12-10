@@ -26,11 +26,11 @@ public class UserRepositoryImpl implements UserRepository {
     public User save(User user) {
         String sql = """
             INSERT INTO users (username, email, password, role, created_at, updated_at, photo) 
-            VALUES (?, ?, ?, ?, ?, ?) 
+            VALUES (?, ?, ?, ?, ?, ?, ?) 
             RETURNING id, username, email, password, role, created_at, updated_at, photo
         """;
         return jdbcTemplate.queryForObject(sql,
-                new Object[]{user.getRealUsername(), user.getEmail(), user.getPassword(), user.getRole(), LocalDateTime.now(), LocalDateTime.now(), user.getPhoto()},
+                new Object[]{user.getRealUsername(), user.getEmail(), user.getPassword(), user.getRole().name(), LocalDateTime.now(), LocalDateTime.now(), user.getPhoto()},
                 new UserRowMapper());
     }
 
@@ -43,7 +43,7 @@ public class UserRepositoryImpl implements UserRepository {
             RETURNING id, username, email, password, role, created_at, updated_at, photo
         """;
         jdbcTemplate.queryForObject(sql,
-                new Object[]{user.getRealUsername(), user.getEmail(), user.getPassword(), user.getRole(), LocalDateTime.now(), user.getPhoto(), user.getId()},
+                new Object[]{user.getRealUsername(), user.getEmail(), user.getPassword(), user.getRole().name(), LocalDateTime.now(), user.getPhoto(), user.getId()},
                 new UserRowMapper());
     }
 
