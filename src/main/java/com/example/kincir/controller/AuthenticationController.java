@@ -9,10 +9,12 @@ import com.example.kincir.utils.dto.request.AuthenticationRequestDTO;
 import com.example.kincir.utils.dto.request.RegisterRequestDTO;
 import com.example.kincir.utils.dto.response.AuthenticationResponseDTO;
 import com.example.kincir.utils.responseWrapper.Response;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -50,7 +52,10 @@ public class AuthenticationController {
             @RequestParam(value = "ADMIN_CREATION_TOKEN", required = false) String paramToken)
     {
         String adminToken = headerToken != null ? headerToken : paramToken;
-        var response = service.register(request, adminToken);
+        var response = (adminToken != null)
+                ? service.register(request, adminToken)
+                : service.register(request);
+
         return Response.success(HttpStatus.CREATED, "Berhasil Register", response);
     }
 
@@ -95,6 +100,24 @@ public class AuthenticationController {
         }
 
         return Response.success(HttpStatus.OK, "Berhasil Login dengan OAuth2", responseDTO);
+    }
+
+    @Operation(summary = "Get user Authenticated", security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Success!", content = {@Content(schema = @Schema(implementation = Response.class))}),
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Forbidden", content = {@Content(schema = @Schema())}),
+            @ApiResponse(responseCode = "404", description = "Not Found", content = {@Content(schema = @Schema())}),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error", content = {@Content(schema = @Schema())})
+    })
+    @GetMapping("/authenticated")
+    public ResponseEntity<?> getUser() {
+//        getUserAuth
+        return Response.success(
+                HttpStatus.OK,
+                "Success get User Authenticated",
+                service.getUserAuthenticated()
+                );
     }
 
     private Map<String, Object> googleTokenValidation(String token) {
