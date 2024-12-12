@@ -14,8 +14,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @Entity
 @Table(name = "subscriptions")
-@Getter
-@Setter
 public class Subscription {
 
     @Id
@@ -31,12 +29,13 @@ public class Subscription {
     private SubscriptionPlan plan;
 
     @Column(name = "startDate", nullable = false)
-    private LocalDateTime startDate;
+    private Long startDate;
 
     @Column(name = "endDate", nullable = false)
-    private LocalDateTime endDate;
+    private Long endDate;
 
     @Column(name = "subscriptionStatus", nullable = false)
+    @Enumerated(EnumType.STRING)
     private SubscriptionStatus status;
 
     @Embedded

@@ -1,6 +1,7 @@
 package com.example.kincir.utils.dto.request;
 
 import com.example.kincir.model.meta.SubscriptionPlan;
+import com.example.kincir.model.meta.User;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -19,4 +20,9 @@ public class SubscriptionRequestDTO {
     @NotBlank
     @NotEmpty
     private SubscriptionPlan subscriptionPlan;
+
+    @NotNull
+    @NotBlank
+    @NotEmpty
+    private User user;
 }

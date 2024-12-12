@@ -14,15 +14,13 @@ import java.util.UUID;
 @AllArgsConstructor
 @Entity
 @Table(name = "subscription_plans")
-@Getter
-@Setter
 public class SubscriptionPlan {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @Column(name = "name", nullable = false)
+    @Column(name = "name", nullable = false, unique = true)
     private String name;
 
     @Column(name = "price", nullable = false)
@@ -36,7 +34,6 @@ public class SubscriptionPlan {
     @Column(name = "isLifetime", nullable = false)
     private Boolean isLifetime;
 
-    @Lob
     @Column(name = "description", nullable = true)
     private String description;
 

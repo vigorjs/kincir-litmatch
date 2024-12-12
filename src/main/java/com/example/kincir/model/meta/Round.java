@@ -1,44 +1,36 @@
 package com.example.kincir.model.meta;
 
 import com.example.kincir.model.BaseEntity;
-import com.example.kincir.model.enums.TransactionStatus;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDateTime;
 
+@Entity
+@Table(name = "rounds")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "transactions")
-public class Transaction {
-
+public class Round {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
-    @ManyToOne
-    @NotNull
-    @JoinColumn(name = "userId", nullable = false)
-    private User user;
+    @Column(name = "round_times")
+    private Integer roundTimes;
 
-    @Column(name = "order_id", nullable = true)
-    private String order_id;
+    @Column(name = "file_id")
+    private String fileId;
 
+    @Column(name = "end_time", nullable = false)
+    private Long end;
 
-    @Getter
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status")
-    private TransactionStatus status;
+    @Column(name = "start_time", nullable = false)
+    private Long start;
 
-
-    @Column(name = "gross_amount")
-    @Min(message = "price cant be negative", value = 0)
-    private Long gross_amount;
+    @Column(name = "now_time", nullable = false)
+    private Long now;
 
     @Embedded
     private BaseEntity baseEntity = new BaseEntity();

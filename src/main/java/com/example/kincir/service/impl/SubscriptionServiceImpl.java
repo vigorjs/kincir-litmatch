@@ -3,6 +3,7 @@ package com.example.kincir.service.impl;
 import com.example.kincir.config.security.advisers.exception.NotFoundException;
 import com.example.kincir.model.enums.SubscriptionStatus;
 import com.example.kincir.model.meta.Subscription;
+import com.example.kincir.model.meta.SubscriptionPlan;
 import com.example.kincir.model.meta.User;
 import com.example.kincir.repository.SubscriptionRepository;
 import com.example.kincir.service.AuthenticationService;
@@ -16,6 +17,8 @@ import org.springframework.security.authorization.AuthorizationResult;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,27 +28,22 @@ import java.util.UUID;
 public class SubscriptionServiceImpl implements SubscriptionService {
     //Required Repository
     private final SubscriptionRepository subscriptionRepository;
-
-    //Required Service
-    private final AuthenticationService authenticationService;
     private final UserService userService;
 
     @Override
     public Subscription create(SubscriptionRequestDTO req) {
-        //Get Authenticated user
-        User currentUser = authenticationService.getUserAuthenticated();
-
+        Long now = new Date().getTime();
         //Input Subscription request data
         Subscription newSubscription = Subscription.builder()
-                .user(currentUser)
+                .user(req.getUser())
                 .plan(req.getSubscriptionPlan())
-                .startDate(LocalDateTime.now())
-                .endDate(LocalDateTime.now().plusDays(req.getSubscriptionPlan().getDuration()))
+                .startDate(now)
+                .endDate(now + req.getSubscriptionPlan().getDuration())
                 .status(SubscriptionStatus.ACTIVE)
                 .build();
 
         //Return Subscription
-        return findById(newSubscription.getId());
+        return subscriptionRepository.save(newSubscription);
     }
 
     @Override
@@ -60,15 +58,21 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     public List<Subscription> findByUserId(Integer userId) {
-        User user = userService.getById(userId);
-        return subscriptionRepository.findByUser(user);
+        return subscriptionRepository.findByUserId(userId);
     }
 
     @Override
-    public List<Subscription> findByCurrentUser() {
-        User currentUser = authenticationService.getUserAuthenticated();
-        return subscriptionRepository.findByUser(currentUser);
+    public Subscription getUserActiveSubscription(Integer userId) {
+        List<Subscription> subscriptions = findByUserId(userId);
+
+        // Filter status ACTIVE dan ambil subscription dengan endDate terbaru
+        return subscriptions.stream()
+                .filter(subscription -> subscription.getStatus() == SubscriptionStatus.ACTIVE)
+                .max(Comparator.comparing(Subscription::getEndDate))
+                .orElseThrow(() -> new NotFoundException("No active subscription found for user with ID: " + userId));
     }
+
+
 
     @Override
     public Subscription expireSubscriptionById(UUID subscriptionId) {
@@ -86,9 +90,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public Subscription cancelSubscriptionById(UUID subscriptionId) {
+    public Subscription cancelSubscriptionById(UUID subscriptionId, Integer userId) {
         // Get Current User
-        User currentUser = authenticationService.getUserAuthenticated();
+        User currentUser = userService.getById(userId);
 
         // Get Subscription
         Subscription foundSubscription = findById(subscriptionId);
@@ -101,6 +105,23 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         // Return Update Subscription
         return findById(foundSubscription.getId());
+    }
+
+    @Override
+    public Boolean validationSubscription(Integer userId) {
+
+        Subscription subscription = getUserActiveSubscription(userId);
+        SubscriptionPlan plan = subscription.getPlan();
+
+        if (plan.getIsLifetime()) return true;
+
+        long now = new Date().getTime();
+        if (now > subscription.getEndDate()){
+            subscription.setStatus(SubscriptionStatus.EXPIRED);
+            return false;
+        }
+
+        return true;
     }
 
     private void validateSubscriptionUser(User user, Subscription subscription){
@@ -121,13 +142,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     private Boolean validateSubscriptionTime(Subscription subscription){
         // Get Current Time
-        LocalDateTime currentTime = LocalDateTime.now();
+        Long currentTime = new Date().getTime();
 
         // Get Current Subscription Time
-        LocalDateTime subscriptionEndTime = subscription.getEndDate();
+        Long subscriptionEndTime = subscription.getEndDate();
 
         // Validate
-        if (subscriptionEndTime.isAfter(currentTime)){
+        if (subscriptionEndTime > currentTime){
             return Boolean.TRUE;
         }
 

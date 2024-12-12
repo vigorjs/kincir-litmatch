@@ -2,12 +2,19 @@ package com.example.kincir.service.impl;
 
 import com.example.kincir.config.security.JwtUtils;
 import com.example.kincir.config.security.advisers.exception.NotFoundException;
+import com.example.kincir.model.enums.SubscriptionStatus;
 import com.example.kincir.model.enums.UserRole;
+import com.example.kincir.model.meta.Subscription;
+import com.example.kincir.model.meta.SubscriptionPlan;
 import com.example.kincir.model.meta.User;
+import com.example.kincir.repository.SubscriptionPlanRepository;
+import com.example.kincir.repository.SubscriptionRepository;
 import com.example.kincir.repository.UserRepository;
 import com.example.kincir.service.AuthenticationService;
+import com.example.kincir.service.SubscriptionService;
 import com.example.kincir.utils.dto.request.AuthenticationRequestDTO;
 import com.example.kincir.utils.dto.request.RegisterRequestDTO;
+import com.example.kincir.utils.dto.request.SubscriptionRequestDTO;
 import com.example.kincir.utils.dto.response.AuthenticationResponseDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,6 +29,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.Date;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +40,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+//    private final SubscriptionService subscriptionService;
+    private final SubscriptionPlanRepository subscriptionPlanRepository;
+    private final SubscriptionRepository subscriptionRepository;
 
     @Override
     public AuthenticationResponseDTO register(RegisterRequestDTO request) {
@@ -51,6 +64,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .build();
 
         var savedUser = userRepository.save(user);
+
+        SubscriptionPlan plan = subscriptionPlanRepository.findByName(savedUser.getRole().equals(UserRole.USER) ? "FREE TRIAL" : "LIFETIME").orElseThrow(() -> new NotFoundException("Plan NotFOund"));
+        Long now = new Date().getTime();
+        Subscription newSubscription = Subscription.builder()
+                .user(savedUser)
+                .plan(plan)
+                .startDate(now)
+                .endDate(now + plan.getDuration())
+                .status(SubscriptionStatus.ACTIVE)
+                .build();
+        subscriptionRepository.save(newSubscription);
+
         var jwtToken = jwtService.generateToken(user);
         var refreshToken = jwtService.generateRefreshToken(user);
 

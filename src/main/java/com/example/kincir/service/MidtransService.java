@@ -7,8 +7,7 @@ import com.example.kincir.utils.dto.response.MidtransSnapResponseDTO;
 
 public interface MidtransService {
     MidtransResponseDTO chargePayment(MidtransRequestDTO req);
-    MidtransSnapResponseDTO chargePaymentSnap(MidtransSnapRequestDTO
-                                                      req);
+    MidtransSnapResponseDTO chargePaymentSnap(MidtransSnapRequestDTO req);
 
     MidtransResponseDTO getStatus(String order_id);
 
