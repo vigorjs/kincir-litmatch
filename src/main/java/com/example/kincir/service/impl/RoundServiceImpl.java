@@ -15,7 +15,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Slf4j
@@ -29,14 +28,14 @@ public class RoundServiceImpl implements RoundService {
 
     @Override
     public Round create(Round req) {
-        Round round = Round.builder()
-                .roundTimes(req.getRoundTimes())
-                .start(req.getStart())
-                .now(req.getNow())
-                .end(req.getEnd())
-                .fileId(req.getFileId())
-                .build();
-        return roundRepository.save(round);
+//        Round round = Round.builder()
+//                .roundTimes(req.getRoundTimes())
+//                .start(req.getStart())
+//                .now(req.getNow())
+//                .end(req.getEnd())
+//                .fileId(req.getFileId())
+//                .build();
+        return roundRepository.save(req);
     }
 
     @Override
@@ -53,7 +52,7 @@ public class RoundServiceImpl implements RoundService {
         List<SearchCriteria.Filter> filters = new ArrayList<>();
 
         if (startFrom != null) {
-            filters.add(SearchCriteria.Filter.builder().field("startFrom")
+            filters.add(SearchCriteria.Filter.builder().field("end_time")
                     .operator(SearchCriteria.Filter.QueryOperator.GREATER_THAN_OR_EQUALS).value(startFrom).build());
         }
 

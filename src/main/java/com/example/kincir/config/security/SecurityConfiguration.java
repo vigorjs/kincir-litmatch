@@ -30,7 +30,7 @@ public class SecurityConfiguration {
 //                .cors().disable()
                 .csrf().disable()
                 .authorizeHttpRequests()
-                .requestMatchers("/api/auth/**", "/v3/api-docs/**", "/swagger-ui/**", "/oauth2/**", "/swagger-ui.html", "/login", "/api/transaction-finish/**").permitAll()
+                .requestMatchers("/api/auth/**", "/v3/api-docs/**", "/swagger-ui/**", "/oauth2/**", "/swagger-ui.html", "/login", "/api/transaction-finish/**", "/api/litatom/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .sessionManagement()

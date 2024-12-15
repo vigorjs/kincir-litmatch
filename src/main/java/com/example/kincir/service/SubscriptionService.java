@@ -15,7 +15,7 @@ public interface SubscriptionService {
     List<Subscription> findAll();
     Subscription findById(UUID subscriptionId);
     List<Subscription> findByUserId(Integer userId);
-    Subscription getUserActiveSubscription(Integer req);
+    Subscription getUserActiveSubscription(Integer userId);
 
     // Update
     // Subscription Expired By System
@@ -23,5 +23,5 @@ public interface SubscriptionService {
     // Cancel Subscription By User
     Subscription cancelSubscriptionById(UUID subscriptionId, Integer userId);
 
-    Boolean validationSubscription(Integer userId);
+    Boolean validationSubscription(Subscription subscription);
 }

@@ -66,10 +66,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         List<Subscription> subscriptions = findByUserId(userId);
 
         // Filter status ACTIVE dan ambil subscription dengan endDate terbaru
-        return subscriptions.stream()
-                .filter(subscription -> subscription.getStatus() == SubscriptionStatus.ACTIVE)
+        Subscription subscription = subscriptions.stream()
+                .filter(x -> x.getStatus() == SubscriptionStatus.ACTIVE)
                 .max(Comparator.comparing(Subscription::getEndDate))
                 .orElseThrow(() -> new NotFoundException("No active subscription found for user with ID: " + userId));
+
+        validationSubscription(subscription);
+        return subscription;
     }
 
 
@@ -108,9 +111,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public Boolean validationSubscription(Integer userId) {
+    public Boolean validationSubscription(Subscription subscription) {
 
-        Subscription subscription = getUserActiveSubscription(userId);
         SubscriptionPlan plan = subscription.getPlan();
 
         if (plan.getIsLifetime()) return true;

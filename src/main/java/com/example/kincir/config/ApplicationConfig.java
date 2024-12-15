@@ -1,6 +1,7 @@
 package com.example.kincir.config;
 
 import com.example.kincir.repository.UserRepository;
+import com.example.kincir.service.DataSyncService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -50,7 +51,6 @@ public class ApplicationConfig {
     public HttpHeaders httpHeaders(){
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("Authorization", "Basic " + Base64.getEncoder().encodeToString((midtransServerKey).getBytes()));
         return headers;
     }
 

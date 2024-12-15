@@ -17,7 +17,7 @@ public class RoundResultResponseDTO {
     @Getter
     @Setter
     public static class Data {
-        @JsonProperty("file_id")
+        @JsonProperty("fileid")
         private String fileId;
     }
 }
